@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  userId     String   @id @unique @default(uuid())
+  password   String
+  pfp        String
+  firstName  String
+  middleName String
+  lastName   String
+  email      String   @unique
+  createdAt  DateTime @default(now())
+
+  posts            Post[]     @relation("UserPosts")
+  relationsByThem  Relation[] @relation("friendsByThem")
+  relationsByMe    Relation[] @relation("friendsByMe")
+  requestsSent     Request[]  @relation("requestsSent")
+  requestsReceived Request[]  @relation("requestsReceived")
+}
+
+model Request {
+  requestId  String   @id @unique @default(uuid())
+  senderId   String
+  receiverId String
+  createdAt  DateTime @default(now())
+
+  sender   User          @relation("requestsSent", fields: [senderId], references: [userId])
+  receiver User          @relation("requestsReceived", fields: [receiverId], references: [userId])
+  status   RequestStatus @default(PENDING)
+}
+
+model Relation {
+  relationId String       @id @unique @default(uuid())
+  initiator  String
+  receiver   String
+  createdAt  DateTime     @default(now())
+  type       RelationType
+  accepter   User         @relation("friendsByMe", fields: [receiver], references: [userId])
+  sender     User         @relation("friendsByThem", fields: [initiator], references: [userId])
+
+  @@unique([initiator, receiver])
+}
+
+model Post {
+  postId    String   @id @unique @default(uuid())
+  posterId  String
+  createdAt DateTime @default(now())
+  images    Image[]
+
+  user User @relation("UserPosts", fields: [posterId], references: [userId])
+}
+
+model Image {
+  imageId String
+  postId  String
+  Post    Post   @relation(fields: [postId], references: [postId])
+
+  @@unique([imageId, postId])
+}
+
+enum RequestStatus {
+  ACCEPTED
+  REJECTED
+  PENDING
+}
+
+enum RelationType {
+  FRIENDS
+  UNFRIENDED
+  BLOCKED_BY_SENDER
+  BLOCKED_BY_RECEIVER
+}
