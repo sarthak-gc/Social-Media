@@ -5,6 +5,13 @@ export const findUser = async (prisma: PrismaClient, userId: string) => {
     where: {
       userId,
     },
+    select: {
+      userId: true,
+      firstName: true,
+      middleName: true,
+      lastName: true,
+      email: true,
+    },
   });
   return user;
 };
