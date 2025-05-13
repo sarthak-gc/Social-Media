@@ -11,8 +11,10 @@ export const findUser = async (prisma: PrismaClient, userId: string) => {
       middleName: true,
       lastName: true,
       email: true,
+      pfp: true,
     },
   });
+
   return user;
 };
 

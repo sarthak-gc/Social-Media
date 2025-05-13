@@ -23,8 +23,9 @@ import { getPrisma } from "../utils/getPrisma";
 // connectionRoutes.post("/request/send/:profileId");
 export const sendRequest = async (c: Context) => {
   const senderId = c.get("userId");
-  const receiverId = c.req.param().receiverId || null;
+  const receiverId = c.req.param().profileId || null;
 
+  console.log(senderId, receiverId);
   if (!receiverId || !senderId || receiverId == senderId) {
     return c.json(
       {
@@ -120,12 +121,13 @@ export const getReceivedRequests = async (c: Context) => {
   const prisma = getPrisma(c);
 
   try {
-    const request = await findReceivedRequests(prisma, userId);
+    const requests = await findReceivedRequests(prisma, userId);
+
     return c.json({
       status: "success",
       messages: "received requests retrieved",
       data: {
-        request,
+        requests: requests ? requests : [],
       },
     });
   } catch (e) {

@@ -13,8 +13,10 @@ import {
   unBlockUser,
   unFriend,
 } from "../controllers/connection.controllers";
+import { authenticate } from "../middlewares/authentication";
 const connectionRoutes = new Hono();
 
+connectionRoutes.use(authenticate);
 connectionRoutes.post("/request/send/:profileId", sendRequest);
 connectionRoutes.get("/requests/pending/received", getReceivedRequests);
 connectionRoutes.get("/requests/pending/sent", getSentRequests);

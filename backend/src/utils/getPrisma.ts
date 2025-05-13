@@ -1,11 +1,8 @@
-import { PrismaClient } from "../generated/prisma";
 import { Context } from "hono";
+import { PrismaClient } from "../generated/prisma/edge";
 
-let prisma: PrismaClient | null = null;
-
-export const getPrisma = (c: Context): PrismaClient => {
-  if (!prisma) {
-    prisma = new PrismaClient();
-  }
-  return prisma;
+export const getPrisma = (c: Context) => {
+  return new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  });
 };

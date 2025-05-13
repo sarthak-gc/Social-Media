@@ -4,36 +4,35 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
 }
 
 model User {
-  userId     String   @id @unique @default(uuid())
-  password   String
-  pfp        String?
-  firstName  String
-  middleName String?
-  lastName   String
-  email      String   @unique
-  createdAt  DateTime @default(now())
-
+  userId           String     @id @unique @default(uuid())
+  password         String
+  pfp              String?
+  firstName        String
+  middleName       String?
+  lastName         String
+  email            String     @unique
+  createdAt        DateTime   @default(now())
   posts            Post[]     @relation("UserPosts")
   relationsByThem  Relation[] @relation("friendsByThem")
   relationsByMe    Relation[] @relation("friendsByMe")
-  requestsSent     Request[]  @relation("requestsSent")
   requestsReceived Request[]  @relation("requestsReceived")
+  requestsSent     Request[]  @relation("requestsSent")
 }
 
 model Request {
-  requestId  String   @id @unique @default(uuid())
+  requestId  String        @id @unique @default(uuid())
   senderId   String
   receiverId String
-  createdAt  DateTime @default(now())
-
-  sender   User          @relation("requestsSent", fields: [senderId], references: [userId])
-  receiver User          @relation("requestsReceived", fields: [receiverId], references: [userId])
-  status   RequestStatus @default(PENDING)
+  createdAt  DateTime      @default(now())
+  status     RequestStatus @default(PENDING)
+  receiver   User          @relation("requestsReceived", fields: [receiverId], references: [userId])
+  sender     User          @relation("requestsSent", fields: [senderId], references: [userId])
 }
 
 model Relation {
@@ -42,8 +41,8 @@ model Relation {
   receiver   String
   createdAt  DateTime     @default(now())
   type       RelationType
-  accepter   User         @relation("friendsByMe", fields: [receiver], references: [userId])
   sender     User         @relation("friendsByThem", fields: [initiator], references: [userId])
+  accepter   User         @relation("friendsByMe", fields: [receiver], references: [userId])
 
   @@unique([initiator, receiver])
 }
@@ -51,18 +50,17 @@ model Relation {
 model Post {
   postId    String   @id @unique @default(uuid())
   posterId  String
+  title     String?
   createdAt DateTime @default(now())
   images    Image[]
-
-  user User @relation("UserPosts", fields: [posterId], references: [userId])
+  user      User     @relation("UserPosts", fields: [posterId], references: [userId])
 }
 
 model Image {
-  imageId String
+  imageId String @unique @default(uuid())
   postId  String
+  url     String
   Post    Post   @relation(fields: [postId], references: [postId])
-
-  @@unique([imageId, postId])
 }
 
 enum RequestStatus {

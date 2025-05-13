@@ -4,6 +4,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { setCookie } from "hono/cookie";
 import { findFriends, findUser } from "../utils/connection";
+import { faker } from "@faker-js/faker";
+import { uploadImage, validateImage } from "../utils/uploadImage";
 
 export const register = async (c: Context) => {
   try {
@@ -13,6 +15,7 @@ export const register = async (c: Context) => {
     const prisma = getPrisma(c);
 
     const hashedPassword = await bcrypt.hash(password, 12);
+    console.log(hashedPassword, "HI");
     const user = await prisma.user.create({
       data: {
         email,
@@ -33,10 +36,10 @@ export const register = async (c: Context) => {
       );
     }
 
-    const token = jwt.sign({ user: user.userId }, "secret");
+    const token = jwt.sign({ userId: user.userId }, "secret");
 
     setCookie(c, "token", token, {
-      sameSite: "Lax",
+      sameSite: "None",
       secure: true,
       httpOnly: true,
     });
@@ -50,6 +53,7 @@ export const register = async (c: Context) => {
       },
     });
   } catch (e) {
+    console.log(e);
     return c.json(
       { status: "error", message: "An unexpected error occurred" },
       500
@@ -63,7 +67,6 @@ export const login = async (c: Context) => {
 
     const prisma = getPrisma(c);
 
-    const hashedPassword = await bcrypt.hash(password, 12);
     const user = await prisma.user.findFirst({
       where: {
         email,
@@ -91,7 +94,7 @@ export const login = async (c: Context) => {
       );
     }
 
-    const token = jwt.sign({ user: user.userId }, "secret");
+    const token = jwt.sign({ userId: user.userId }, "secret");
     setCookie(c, "token", token, {
       sameSite: "Lax",
       secure: true,
@@ -127,14 +130,7 @@ export const aboutMe = async (c: Context) => {
   const prisma = getPrisma(c);
 
   try {
-    const friends = await prisma.relation.findMany({
-      where: {
-        OR: [
-          { initiator: userId, type: "FRIENDS" },
-          { sender: userId, type: "FRIENDS" },
-        ],
-      },
-    });
+    const friends = findFriends(prisma, userId);
 
     const me = await prisma.user.findFirst({
       where: {
@@ -145,6 +141,7 @@ export const aboutMe = async (c: Context) => {
         email: true,
         lastName: true,
         firstName: true,
+        pfp: true,
       },
     });
 
@@ -152,13 +149,12 @@ export const aboutMe = async (c: Context) => {
       status: "success",
       message: "personal data retrieved",
       data: {
-        me: {
-          me,
-          friends,
-        },
+        me,
+        friends,
       },
     });
   } catch (e) {
+    console.log(e);
     return c.json(
       { status: "error", message: "An unexpected error occurred" },
       500
@@ -171,9 +167,10 @@ export const getUser = async (c: Context) => {
   if (!targetId) {
     return;
   }
+  console.log(targetId);
   const prisma = getPrisma(c);
   try {
-    const user = findUser(prisma, targetId);
+    const user = await findUser(prisma, targetId);
 
     if (!user) {
       return;
@@ -186,6 +183,7 @@ export const getUser = async (c: Context) => {
       },
     });
   } catch (e) {
+    console.log(e);
     return c.json(
       { status: "error", message: "An unexpected error occurred" },
       500
@@ -200,7 +198,7 @@ export const getFriends = async (c: Context) => {
     const friends = findFriends(prisma, targetId);
 
     return c.json({
-      status: "error",
+      status: "success",
       message: "User's friends retrieved",
       data: {
         friends,
@@ -211,5 +209,139 @@ export const getFriends = async (c: Context) => {
       { status: "error", message: "An unexpected error occurred" },
       500
     );
+  }
+};
+
+export const changePfp = async (c: Context) => {
+  const userId = c.get("userId");
+
+  const formData = await c.req.formData();
+
+  const image = formData.get("image") as File;
+
+  if (!(image instanceof File)) {
+    return c.json({ msg: "invalid" });
+  }
+
+  const formDataToSend = await validateImage(image);
+  const prisma = getPrisma(c);
+
+  try {
+    const result = await uploadImage(formDataToSend);
+
+    await prisma.user.update({
+      where: {
+        userId,
+      },
+      data: {
+        pfp: result.secure_url,
+      },
+    });
+    return c.json({
+      status: "success",
+      message: "Pfp uploaded",
+      data: {
+        url: result.secure_url,
+      },
+    });
+  } catch (e) {
+    console.log(e);
+    return c.json(
+      { status: "error", message: "An unexpected error occurred" },
+      500
+    );
+  }
+};
+
+export const getUsers = async (c: Context) => {
+  const username = c.req.param().name;
+  const prisma = getPrisma(c);
+
+  try {
+    const users = await prisma.user.findMany({
+      where: {
+        OR: [
+          { firstName: { contains: username, mode: "insensitive" } },
+          { middleName: { contains: username, mode: "insensitive" } },
+          { lastName: { contains: username, mode: "insensitive" } },
+          { email: { contains: username, mode: "insensitive" } },
+        ],
+      },
+      select: {
+        userId: true,
+        firstName: true,
+        middleName: true,
+        lastName: true,
+        email: true,
+        pfp: true,
+      },
+    });
+
+    if (!users.length) {
+      return c.json({
+        status: "success",
+        message: "No users found",
+        data: {
+          users: [],
+        },
+      });
+    }
+
+    return c.json({
+      status: "success",
+      message: "Users found",
+      data: {
+        users,
+      },
+    });
+  } catch (e) {
+    console.log(e);
+    return c.json(
+      { status: "error", message: "An unexpected error occurred" },
+      500
+    );
+  }
+};
+
+export const seed = async (c: Context) => {
+  const prisma = getPrisma(c);
+  const credentials: Record<string, string> = {};
+
+  try {
+    for (let i = 0; i < 10; i++) {
+      const password = faker.internet.password();
+      const hashedPassword = await bcrypt.hash(password, 12);
+
+      const user = await prisma.user.create({
+        data: {
+          password: hashedPassword,
+          firstName: faker.person.firstName(),
+          middleName: faker.person.middleName(),
+          lastName: faker.person.lastName(),
+          email: faker.internet.email(),
+          pfp: faker.image.avatar(),
+        },
+      });
+
+      credentials[user.email] = password;
+
+      for (let j = 0; j < 2; j++) {
+        await prisma.post.create({
+          data: {
+            posterId: user.userId,
+            title: faker.lorem.sentence(),
+          },
+        });
+      }
+
+      console.log(`Created user ${user.email} : ${password}`);
+    }
+
+    return c.text("DONE");
+  } catch (error) {
+    console.error("Error seeding database:", error);
+    return c.text("Failed");
+  } finally {
+    await prisma.$disconnect();
   }
 };
