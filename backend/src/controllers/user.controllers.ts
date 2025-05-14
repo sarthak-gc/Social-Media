@@ -130,7 +130,7 @@ export const aboutMe = async (c: Context) => {
   const prisma = getPrisma(c);
 
   try {
-    const friends = findFriends(prisma, userId);
+    const friends = await findFriends(prisma, userId);
 
     const me = await prisma.user.findFirst({
       where: {
@@ -175,6 +175,7 @@ export const getUser = async (c: Context) => {
     if (!user) {
       return;
     }
+
     return c.json({
       status: "success",
       message: "User data received",
@@ -195,7 +196,7 @@ export const getFriends = async (c: Context) => {
   const targetId = c.req.param().profileId;
   const prisma = getPrisma(c);
   try {
-    const friends = findFriends(prisma, targetId);
+    const friends = await findFriends(prisma, targetId);
 
     return c.json({
       status: "success",

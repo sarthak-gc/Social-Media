@@ -8,8 +8,10 @@ import {
   createRequest,
   findConnection,
   findFriends,
+  findReceivedRequest,
   findReceivedRequests,
   findRequest,
+  findSentRequest,
   findSentRequests,
   findUser,
   getBlockedUsers,
@@ -25,7 +27,6 @@ export const sendRequest = async (c: Context) => {
   const senderId = c.get("userId");
   const receiverId = c.req.param().profileId || null;
 
-  console.log(senderId, receiverId);
   if (!receiverId || !senderId || receiverId == senderId) {
     return c.json(
       {
@@ -41,7 +42,7 @@ export const sendRequest = async (c: Context) => {
   try {
     const [receiver, alreadyRequestSent, alreadyConnected] = await Promise.all([
       findUser(prisma, receiverId),
-      findRequest(prisma, senderId, receiverId),
+      findSentRequest(prisma, senderId, receiverId),
       findConnection(prisma, senderId, receiverId),
     ]);
 
@@ -145,12 +146,12 @@ export const getSentRequests = async (c: Context) => {
   const prisma = getPrisma(c);
 
   try {
-    const request = await findSentRequests(prisma, userId);
+    const requests = await findSentRequests(prisma, userId);
     return c.json({
       status: "success",
       messages: "sent requests retrieved",
       data: {
-        request,
+        requests: requests ? requests : [],
       },
     });
   } catch (e) {
@@ -162,7 +163,6 @@ export const getSentRequests = async (c: Context) => {
 };
 
 // connectionRoutes.put("/unfriend/:profileId");
-
 export const unFriend = async (c: Context) => {
   const userId = c.get("userId");
   const targetId = c.req.param().profileId || null;
@@ -297,7 +297,7 @@ export const acceptFriendRequest = async (c: Context) => {
   }
 
   const prisma = getPrisma(c);
-  const request = await findReceivedRequests(prisma, userId);
+  const request = await findReceivedRequest(prisma, requestId, userId);
 
   if (!request) {
     return c.json({ status: "error", message: "Request not found" }, 404);
@@ -334,7 +334,7 @@ export const rejectFriendRequest = async (c: Context) => {
   }
 
   const prisma = getPrisma(c);
-  const request = await findReceivedRequests(prisma, userId);
+  const request = await findReceivedRequest(prisma, requestId, userId);
 
   if (!request) {
     return c.json({ status: "error", message: "Request not found" }, 404);
@@ -358,7 +358,6 @@ export const rejectFriendRequest = async (c: Context) => {
 };
 
 // connectionRoutes.put("/cancel/request/:requestId");
-
 export const cancelFriendRequest = async (c: Context) => {
   const userId = c.get("userId");
 
@@ -369,7 +368,7 @@ export const cancelFriendRequest = async (c: Context) => {
   }
 
   const prisma = getPrisma(c);
-  const request = await findSentRequests(prisma, userId);
+  const request = await findSentRequest(prisma, requestId, userId);
 
   if (!request) {
     return c.json({ status: "error", message: "Request not found" }, 404);
@@ -392,40 +391,86 @@ export const cancelFriendRequest = async (c: Context) => {
   }
 };
 
-// connectionRoutes.get("/request/status/:profileId");
-
-export const getRequestStatus = async (c: Context) => {
+export const getConnectionStatus = async (c: Context) => {
   const userId = c.get("userId");
   const targetId = c.req.param().profileId || null;
 
-  if (!targetId || targetId == userId) {
-    return c.json({ status: "error", message: "invalid profile id" }, 409);
+  if (!targetId || targetId === userId) {
+    return c.json({ status: "error", message: "Invalid profile ID" }, 409);
   }
 
   const prisma = getPrisma(c);
-  try {
-    const friendRequest = await findSentRequests(prisma, userId);
 
-    if (!friendRequest) {
-      return c.json({ status: "error", message: "No request found" }, 409);
+  try {
+    const [sentRequest, receivedRequest, user] = await Promise.all([
+      findSentRequest(prisma, userId, targetId),
+      findRequest(prisma, targetId, userId),
+      findUser(prisma, targetId),
+    ]);
+
+    console.log(sentRequest);
+    if (!user) {
+      return c.json({ status: "error", message: "Invalid target ID" }, 404);
+    }
+
+    if (sentRequest) {
+      return c.json({
+        status: "success",
+        message: "Request sent",
+        data: {
+          requestId: sentRequest.requestId,
+        },
+      });
+    }
+
+    if (receivedRequest) {
+      return c.json({
+        status: "success",
+        message: "Request received",
+        data: {
+          requestId: receivedRequest.requestId,
+        },
+      });
+    }
+
+    const connection = await prisma.relation.findFirst({
+      where: {
+        OR: [
+          { initiator: userId, receiver: targetId },
+          { initiator: targetId, receiver: userId },
+        ],
+        NOT: { type: "UNFRIENDED" },
+      },
+    });
+
+    let message = "No relation";
+    if (connection) {
+      const { type, initiator, receiver } = connection;
+      if (type === "FRIENDS") message = "Friends";
+      else if (
+        (type === "BLOCKED_BY_SENDER" && userId === initiator) ||
+        (type === "BLOCKED_BY_RECEIVER" && userId === receiver)
+      )
+        message = "You blocked the user";
+      else if (
+        (type === "BLOCKED_BY_RECEIVER" && userId === initiator) ||
+        (type === "BLOCKED_BY_SENDER" && userId === receiver)
+      )
+        message = "You are blocked by the user";
     }
 
     return c.json({
       status: "success",
-      message: "Status retrieved",
-      data: {
-        status: friendRequest.status,
-      },
+      message,
     });
-  } catch (e) {
+  } catch (err) {
+    console.error("Error fetching connection status:", err);
     return c.json(
       { status: "error", message: "An unexpected error occurred" },
       500
     );
   }
 };
-
-// connectionRoutes.get("/blocked/all");
 
 export const getAllBlockedUsers = async (c: Context) => {
   const userId = c.get("userId");

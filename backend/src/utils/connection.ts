@@ -18,6 +18,7 @@ export const findUser = async (prisma: PrismaClient, userId: string) => {
   return user;
 };
 
+//find request
 export const findRequest = async (
   prisma: PrismaClient,
   senderId: string,
@@ -66,37 +67,144 @@ export const createRequest = async (
 };
 
 export const findFriends = async (prisma: PrismaClient, userId: string) => {
-  const friends = await prisma.relation.findFirst({
+  const relations = await prisma.relation.findMany({
     where: {
-      OR: [{ initiator: userId, receiver: userId }],
+      OR: [{ initiator: userId }, { receiver: userId }],
       type: "FRIENDS",
     },
+    select: {
+      initiator: true,
+      receiver: true,
+      sender: {
+        select: {
+          userId: true,
+          pfp: true,
+          firstName: true,
+          middleName: true,
+          lastName: true,
+        },
+      },
+      accepter: {
+        select: {
+          userId: true,
+          pfp: true,
+          firstName: true,
+          middleName: true,
+          lastName: true,
+        },
+      },
+    },
   });
+
+  const friends = relations.map((relation) => {
+    return relation.initiator === userId ? relation.accepter : relation.sender;
+  });
+
   return friends;
 };
 
+//find request
 export const findReceivedRequests = async (
   prisma: PrismaClient,
   userId: string
 ) => {
-  const requests = await prisma.request.findFirst({
+  const requests = await prisma.request.findMany({
     where: {
       receiverId: userId,
       status: "PENDING",
+    },
+    include: {
+      sender: {
+        select: {
+          firstName: true,
+          lastName: true,
+          userId: true,
+          pfp: true,
+        },
+      },
     },
   });
   return requests;
 };
 
-export const findSentRequests = async (
+//find request
+export const findReceivedRequest = async (
   prisma: PrismaClient,
+  requestId: string,
   userId: string
 ) => {
   const requests = await prisma.request.findFirst({
     where: {
-      senderId: userId,
+      requestId,
+      receiverId: userId,
+      status: "PENDING",
+    },
+    include: {
+      sender: {
+        select: {
+          firstName: true,
+          lastName: true,
+          userId: true,
+          pfp: true,
+        },
+      },
     },
   });
+  return requests;
+};
+
+//find request
+export const findSentRequests = async (
+  prisma: PrismaClient,
+  senderId: string
+) => {
+  const requests = await prisma.request.findMany({
+    where: {
+      senderId,
+      status: "PENDING",
+    },
+    select: {
+      receiver: {
+        select: {
+          firstName: true,
+          lastName: true,
+          userId: true,
+          pfp: true,
+        },
+      },
+      receiverId: true,
+      requestId: true,
+      createdAt: true,
+      status: true,
+    },
+  });
+  return requests;
+};
+
+//find request
+export const findSentRequest = async (
+  prisma: PrismaClient,
+  senderId: string,
+  receiverId: string
+) => {
+  const requests = await prisma.request.findFirst({
+    where: {
+      receiverId,
+      senderId,
+      status: "PENDING",
+    },
+    include: {
+      sender: {
+        select: {
+          firstName: true,
+          lastName: true,
+          userId: true,
+          pfp: true,
+        },
+      },
+    },
+  });
+  console.log("HI THERE");
   return requests;
 };
 
@@ -192,6 +300,7 @@ export const cancelRequest = async (
     },
   });
 };
+
 export const getBlockedUsers = async (prisma: PrismaClient, userId: string) => {
   const relations = await prisma.relation.findMany({
     where: {

@@ -4,9 +4,9 @@ import {
   blockUser,
   cancelFriendRequest,
   getAllBlockedUsers,
+  getConnectionStatus,
   getFriends,
   getReceivedRequests,
-  getRequestStatus,
   getSentRequests,
   rejectFriendRequest,
   sendRequest,
@@ -20,14 +20,18 @@ connectionRoutes.use(authenticate);
 connectionRoutes.post("/request/send/:profileId", sendRequest);
 connectionRoutes.get("/requests/pending/received", getReceivedRequests);
 connectionRoutes.get("/requests/pending/sent", getSentRequests);
+
 connectionRoutes.get("/friends/all", getFriends);
+
 connectionRoutes.put("/unfriend/:profileId", unFriend);
 connectionRoutes.put("/block/:profileId", blockUser);
 connectionRoutes.put("/unblock/:profileId", unBlockUser);
+
 connectionRoutes.put("/request/accept/:requestId", acceptFriendRequest);
 connectionRoutes.put("/request/reject/:requestId", rejectFriendRequest);
+
 connectionRoutes.put("/cancel/request/:requestId", cancelFriendRequest);
-connectionRoutes.get("/connection/status/:profileId", getRequestStatus);
+connectionRoutes.get("/status/:profileId", getConnectionStatus);
 connectionRoutes.get("/blocked/all", getAllBlockedUsers);
 
 export default connectionRoutes;
