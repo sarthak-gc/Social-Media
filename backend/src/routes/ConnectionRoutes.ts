@@ -30,7 +30,7 @@ connectionRoutes.put("/unblock/:profileId", unBlockUser);
 connectionRoutes.put("/request/accept/:requestId", acceptFriendRequest);
 connectionRoutes.put("/request/reject/:requestId", rejectFriendRequest);
 
-connectionRoutes.put("/cancel/request/:requestId", cancelFriendRequest);
+connectionRoutes.put("/request/cancel/:requestId", cancelFriendRequest);
 connectionRoutes.get("/status/:profileId", getConnectionStatus);
 connectionRoutes.get("/blocked/all", getAllBlockedUsers);
 

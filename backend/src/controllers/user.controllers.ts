@@ -255,6 +255,7 @@ export const changePfp = async (c: Context) => {
 };
 
 export const getUsers = async (c: Context) => {
+  const userId = c.get("userId");
   const username = c.req.param().name;
   const prisma = getPrisma(c);
 
@@ -267,6 +268,7 @@ export const getUsers = async (c: Context) => {
           { lastName: { contains: username, mode: "insensitive" } },
           { email: { contains: username, mode: "insensitive" } },
         ],
+        NOT: [{ userId }],
       },
       select: {
         userId: true,
@@ -294,6 +296,42 @@ export const getUsers = async (c: Context) => {
       data: {
         users,
       },
+    });
+  } catch (e) {
+    console.log(e);
+    return c.json(
+      { status: "error", message: "An unexpected error occurred" },
+      500
+    );
+  }
+};
+
+export const updateMe = async (c: Context) => {
+  const userId = c.get("userId");
+  const { firstName, lastName, middleName } = await c.req.json();
+
+  if (!firstName && !lastName && !middleName) {
+    return c.json({ status: "error", message: "Nothing to update" }, 409);
+  }
+
+  const prisma = getPrisma(c);
+  let updatedData: any = {};
+
+  if (firstName) updatedData.firstName = firstName;
+  if (middleName) updatedData.middleName = middleName;
+  if (lastName) updatedData.lastName = lastName;
+  try {
+    await prisma.user.update({
+      where: {
+        userId,
+      },
+      data: {
+        ...updatedData,
+      },
+    });
+    return c.json({
+      status: "success",
+      message: "User Updated",
     });
   } catch (e) {
     console.log(e);

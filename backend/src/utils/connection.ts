@@ -18,8 +18,8 @@ export const findUser = async (prisma: PrismaClient, userId: string) => {
   return user;
 };
 
-//find request
-export const findRequest = async (
+//find request using user1 and user2 Id
+export const findRequestUsingUsersId = async (
   prisma: PrismaClient,
   senderId: string,
   receiverId: string
@@ -30,6 +30,7 @@ export const findRequest = async (
         { senderId, receiverId },
         { senderId: receiverId, receiverId: senderId },
       ],
+      NOT: [{ status: "REJECTED" }],
     },
   });
   return friendRequest;
@@ -103,7 +104,6 @@ export const findFriends = async (prisma: PrismaClient, userId: string) => {
   return friends;
 };
 
-//find request
 export const findReceivedRequests = async (
   prisma: PrismaClient,
   userId: string
@@ -127,8 +127,8 @@ export const findReceivedRequests = async (
   return requests;
 };
 
-//find request
-export const findReceivedRequest = async (
+//find request using request id
+export const findRequestUsingRequestId = async (
   prisma: PrismaClient,
   requestId: string,
   userId: string
@@ -136,7 +136,7 @@ export const findReceivedRequest = async (
   const requests = await prisma.request.findFirst({
     where: {
       requestId,
-      receiverId: userId,
+      OR: [{ receiverId: userId }, { senderId: userId }],
       status: "PENDING",
     },
     include: {

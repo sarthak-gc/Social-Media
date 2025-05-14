@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import connectionRoutes from "./ConnectionRoutes";
-import contentRoutes from "./ContentRoutes";
+import connectionRoutes from "./connectionRoutes";
+import contentRoutes from "./contentRoutes";
 import userRoutes from "./userRoutes";
 
 const routes = new Hono();

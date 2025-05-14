@@ -132,6 +132,7 @@ export const getFeed = async (c: Context) => {
         select: {
           firstName: true,
           lastName: true,
+          pfp: true,
         },
       },
     },
@@ -186,6 +187,45 @@ export const getPost = async (c: Context) => {
     });
   } catch (e) {
     console.error("Error fetching post:", e);
+    return c.json(
+      { status: "error", message: "An unexpected error occurred" },
+      500
+    );
+  }
+};
+
+export const getImage = async (c: Context) => {
+  const imageId = c.req.param().imageId;
+
+  if (!imageId) {
+    return c.json(
+      {
+        status: "error",
+        message: "Image not found",
+      },
+      404
+    );
+  }
+
+  const prisma = getPrisma(c);
+  try {
+    const image = await prisma.image.findFirst({
+      where: {
+        imageId,
+      },
+    });
+    if (!image) {
+      return c.json({ status: "error", message: "Image not found" }, 404);
+    }
+
+    return c.json({
+      status: "success",
+      message: "Image received",
+      data: {
+        imageUrl: image.url,
+      },
+    });
+  } catch (e) {
     return c.json(
       { status: "error", message: "An unexpected error occurred" },
       500

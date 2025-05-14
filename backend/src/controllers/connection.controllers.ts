@@ -8,9 +8,9 @@ import {
   createRequest,
   findConnection,
   findFriends,
-  findReceivedRequest,
+  findRequestUsingRequestId,
   findReceivedRequests,
-  findRequest,
+  findRequestUsingUsersId,
   findSentRequest,
   findSentRequests,
   findUser,
@@ -297,7 +297,7 @@ export const acceptFriendRequest = async (c: Context) => {
   }
 
   const prisma = getPrisma(c);
-  const request = await findReceivedRequest(prisma, requestId, userId);
+  const request = await findRequestUsingRequestId(prisma, requestId, userId);
 
   if (!request) {
     return c.json({ status: "error", message: "Request not found" }, 404);
@@ -334,7 +334,7 @@ export const rejectFriendRequest = async (c: Context) => {
   }
 
   const prisma = getPrisma(c);
-  const request = await findReceivedRequest(prisma, requestId, userId);
+  const request = await findRequestUsingRequestId(prisma, requestId, userId);
 
   if (!request) {
     return c.json({ status: "error", message: "Request not found" }, 404);
@@ -367,9 +367,12 @@ export const cancelFriendRequest = async (c: Context) => {
     return c.json({ status: "error", message: "invalid request id " }, 404);
   }
 
-  const prisma = getPrisma(c);
-  const request = await findSentRequest(prisma, requestId, userId);
+  console.log(requestId, "HI THERE I AM ID");
 
+  const prisma = getPrisma(c);
+  const request = await findRequestUsingRequestId(prisma, requestId, userId);
+
+  console.log(request, " HI THER EI AM REQUEST");
   if (!request) {
     return c.json({ status: "error", message: "Request not found" }, 404);
   }
@@ -404,7 +407,7 @@ export const getConnectionStatus = async (c: Context) => {
   try {
     const [sentRequest, receivedRequest, user] = await Promise.all([
       findSentRequest(prisma, userId, targetId),
-      findRequest(prisma, targetId, userId),
+      findRequestUsingUsersId(prisma, targetId, userId),
       findUser(prisma, targetId),
     ]);
 
@@ -424,13 +427,27 @@ export const getConnectionStatus = async (c: Context) => {
     }
 
     if (receivedRequest) {
-      return c.json({
-        status: "success",
-        message: "Request received",
-        data: {
-          requestId: receivedRequest.requestId,
-        },
-      });
+      if (receivedRequest.status === "PENDING")
+        return c.json({
+          status: "success",
+          message: "Request received",
+          data: {
+            requestId: receivedRequest.requestId,
+          },
+        });
+      if (receivedRequest.status === "ACCEPTED")
+        return c.json({
+          status: "success",
+          message: "Friends",
+          data: {
+            requestId: receivedRequest.requestId,
+          },
+        });
+      if (receivedRequest.status === "REJECTED")
+        return c.json({
+          status: "success",
+          message: "No relation",
+        });
     }
 
     const connection = await prisma.relation.findFirst({
