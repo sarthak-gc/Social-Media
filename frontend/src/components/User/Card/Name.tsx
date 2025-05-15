@@ -2,7 +2,7 @@ interface NameProp {
   firstName: string;
   lastName: string;
   email: string;
-  middleName: string;
+  middleName?: string;
 }
 const Name = ({ firstName, lastName, email, middleName }: NameProp) => {
   return (

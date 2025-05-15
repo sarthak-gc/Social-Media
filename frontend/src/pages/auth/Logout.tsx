@@ -1,31 +1,22 @@
 import { useEffect } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { logout } from "@/services/auth";
 
 const Logout = () => {
   const navigate = useNavigate();
-
   useEffect(() => {
-    const performLogout = async () => {
+    (async () => {
       try {
-        await axios.post(
-          "http://localhost:8787/user/logout",
-          {},
-          {
-            withCredentials: true,
-          }
-        );
+        await logout();
+      } catch (error) {
+        console.error("Logout failed:", error);
+      } finally {
         localStorage.removeItem("token");
         localStorage.removeItem("userId");
         navigate("/login");
-      } catch (error) {
-        console.error("Logout failed:", error);
-        navigate("/login");
       }
-    };
-
-    performLogout();
+    })();
   }, [navigate]);
 
   return (

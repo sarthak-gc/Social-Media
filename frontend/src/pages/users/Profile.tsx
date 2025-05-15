@@ -1,99 +1,81 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 import UserCard from "@/components/User/Card/Card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import PostCard from "@/components/Post/Card";
-
-export interface UserProfile {
-  userId: string;
-  firstName: string;
-  lastName: string;
-  middleName: string;
-  email: string;
-  pfp: string;
-}
-
-export interface Post {
-  postId: string;
-  title: string;
-  createdAt: string;
-  images: {
-    imageId: string;
-    url: string;
-  }[];
-  user: {
-    firstName: string;
-    lastName: string;
-    middleName: string;
-  };
-}
+import {
+  fetchUserFriends,
+  fetchUserPosts,
+  fetchUserProfile,
+} from "@/services/user";
+import type { Post, UserI } from "../types/types";
 
 const User = () => {
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [friends, setFriends] = useState<UserProfile[]>([]);
+  const [user, setUser] = useState<UserI | null>(null);
+  const [friends, setFriends] = useState<UserI[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("posts");
   const { userId } = useParams();
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    (async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:8787/user/profile/${userId}`,
-          {
-            withCredentials: true,
-          }
-        );
+        if (!userId) return;
 
-        if (response.data.status === "success") {
-          setUser(response.data.data.user);
+        const { status, data } = await fetchUserProfile(userId);
+
+        if (status === "success") {
+          setUser(data.user);
         }
       } catch (error) {
         setError("Failed to fetch user profile");
         console.error("Error fetching user profile:", error);
       }
-    };
+    })();
+    // const connectionStatus = async () => {
+    //   try {
+    //     const response = await axios.get(
+    //       `http://localhost:8787/connection/status/${userId}`,
+    //       {
+    //         withCredentials: true,
+    //       }
+    //     );
+    //   } catch (e) {
+    //     if (e instanceof AxiosError) {
+    //       console.log(e.response?.data);
+    //     }
+    //   }
+    // };
 
-    const fetchUserFriends = async () => {
+    (async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:8787/user/friends/${userId}`,
-          {
-            withCredentials: true,
-          }
-        );
+        if (!userId) return;
+        const { status, data } = await fetchUserFriends(userId);
 
-        if (response.data.status === "success") {
-          setFriends(response.data.data.friends);
+        if (status === "success") {
+          setFriends(data.friends);
         }
       } catch (error) {
-        console.error("Error fetching friends:", error);
+        setError("Failed to fetch user friends");
+        console.error("Error fetching user friends:", error);
       }
-    };
-
-    const fetchUserPosts = async () => {
+    })();
+    (async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:8787/content/all/${userId}`,
-          {
-            withCredentials: true,
-          }
-        );
+        if (!userId) return;
+        const { status, data } = await fetchUserPosts(userId);
 
-        if (response.data.status === "success") {
-          setPosts(response.data.data.posts);
+        if (status === "success") {
+          setPosts(data.posts);
         }
       } catch (error) {
-        console.error("Error fetching posts:", error);
+        setError("Failed to fetch user posts");
+        console.error("Error fetching user posts:", error);
       }
-    };
-    fetchUserFriends();
-    fetchUserPosts();
-    fetchUserProfile();
+    })();
   }, [userId]);
 
   if (error) {
@@ -113,10 +95,8 @@ const User = () => {
   }
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-      {/* User Profile Card */}
       <UserCard user={user} />
 
-      {/* Tab Navigation */}
       <div className="flex justify-center space-x-4 mb-6">
         <Button
           className={`px-4 py-2 text-sm font-semibold rounded-md  ${
@@ -140,7 +120,6 @@ const User = () => {
         </Button>
       </div>
 
-      {/* Conditional Render Based on Active Tab */}
       {activeTab === "posts" ? (
         <Card>
           <CardHeader>
@@ -163,12 +142,13 @@ const User = () => {
               Friends
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <CardContent className="">
             {friends.length > 0 ? (
               friends.map((friend) => (
-                <div
+                <Link
+                  to={`/user/${friend.userId}`}
                   key={friend.userId}
-                  className="flex items-center gap-4 p-3 border rounded-md shadow-sm bg-white"
+                  className="flex items-center gap-4 p-3 border rounded-md shadow-sm bg-white mb-2"
                 >
                   {friend.pfp ? (
                     <img
@@ -191,7 +171,7 @@ const User = () => {
                       {friend.email}
                     </p>
                   </div>
-                </div>
+                </Link>
               ))
             ) : (
               <p className="text-center text-gray-500 col-span-full">

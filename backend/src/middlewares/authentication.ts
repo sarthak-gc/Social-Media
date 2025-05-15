@@ -2,7 +2,7 @@ import { Context } from "hono";
 import { getCookie } from "hono/cookie";
 import jwt from "jsonwebtoken";
 import { getPrisma } from "../utils/getPrisma";
-import { findUser } from "../utils/connection";
+import { findUser } from "../utils/user";
 
 export const authenticate = async (c: Context, next: any) => {
   try {

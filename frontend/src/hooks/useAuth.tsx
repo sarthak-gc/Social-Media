@@ -28,6 +28,5 @@ export const useAuth = () => {
     checkAuth();
   }, []);
 
-
   return { isLoggedIn, loading };
 };

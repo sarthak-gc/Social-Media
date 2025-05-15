@@ -1,30 +1,15 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ProfileImage from "./Card/Pfp";
-import PendingList from "./Friends/PendingList";
 import FriendList from "./Friends/FriendList";
-
-interface UserData {
-  userId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  pfp: string;
-}
-
-interface FriendData {
-  userId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  pfp: string;
-}
+import { Link, Outlet } from "react-router-dom";
+import type { UserI } from "@/pages/types/types";
+import { getPersonalData, updateMe } from "@/services/me";
 
 const Self = () => {
-  const [userData, setUserData] = useState<UserData>({
+  const [userData, setUserData] = useState<UserI>({
     userId: "",
     firstName: "",
     lastName: "",
@@ -33,35 +18,31 @@ const Self = () => {
   });
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [pfp, setPfp] = useState("");
+  const [middleName, setMiddleName] = useState("");
 
-  const [friends, setFriends] = useState<FriendData[]>([]);
+  const [friends, setFriends] = useState<UserI[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    (async () => {
       setIsLoading(true);
       try {
-        const response = await axios.get("http://localhost:8787/user/me", {
-          withCredentials: true,
-        });
-        if (response.data.status === "success") {
-          const user = response.data.data.me;
+        const { status, data } = await getPersonalData();
+        if (status === "success") {
+          const user = data.me;
           setUserData(user);
           setFirstName(user.firstName);
           setLastName(user.lastName);
-          setPfp(user.pfp);
-          setFriends(response.data.data.friends);
+          setMiddleName(user.middleName);
+          setFriends(data.friends);
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
       } finally {
         setIsLoading(false);
       }
-    };
-
-    fetchUserData();
+    })();
   }, []);
 
   const handleSave = async () => {
@@ -70,14 +51,14 @@ const Self = () => {
         ...userData,
         firstName,
         lastName,
-        pfp,
+        middleName,
       };
-      const response = await axios.put(
-        "http://localhost:8787/user/update",
-        updatedData,
-        { withCredentials: true }
+      const { status } = await updateMe(
+        userData.firstName,
+        userData.middleName || "",
+        userData.lastName
       );
-      if (response.data.status === "success") {
+      if (status === "success") {
         setUserData(updatedData);
         setIsEditing(false);
       }
@@ -92,10 +73,6 @@ const Self = () => {
 
   return (
     <div className="flex gap-6 p-6">
-      <div className="w-1/3">
-        <PendingList />
-      </div>
-
       <div className="w-2/3">
         <Card>
           <CardHeader>
@@ -105,7 +82,11 @@ const Self = () => {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex justify-center">
-              <ProfileImage pfp={userData.pfp} name={userData.firstName} />
+              <ProfileImage
+                pfp={userData.pfp}
+                name={userData.firstName}
+                editable={true}
+              />
             </div>
 
             <div className="space-y-4">
@@ -129,10 +110,8 @@ const Self = () => {
                       variant="outline"
                       onClick={() => {
                         setIsEditing(false);
-                        // Reset form values to current userData if cancelled
                         setFirstName(userData.firstName);
                         setLastName(userData.lastName);
-                        setPfp(userData.pfp);
                       }}
                     >
                       Cancel
@@ -159,6 +138,16 @@ const Self = () => {
         </Card>
 
         <FriendList friends={friends} />
+      </div>
+      <div className="w-1/3">
+        <Card className="h-[90vh] overflow-auto px-10">
+          <div className=" flex gap-4 w-full  ">
+            <Link to="friends"> All</Link>
+            <Link to="sent">Sent</Link>
+            <Link to="received">Received</Link>
+          </div>
+          <Outlet />
+        </Card>
       </div>
     </div>
   );

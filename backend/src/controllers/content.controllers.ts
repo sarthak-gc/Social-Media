@@ -2,11 +2,10 @@ import { Context } from "hono";
 import { getPrisma } from "../utils/getPrisma";
 
 import { uploadImage, validateImage } from "../utils/uploadImage";
-import { findUser } from "../utils/connection";
+import { findUser } from "../utils/user";
 
 export const addPost = async (c: Context) => {
   const userId = c.get("userId");
-  console.log("TESINT");
 
   try {
     // const { title } = (await c.req.json()) || null;

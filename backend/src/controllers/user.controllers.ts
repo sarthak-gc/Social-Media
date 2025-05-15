@@ -3,9 +3,12 @@ import { getPrisma } from "../utils/getPrisma";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { setCookie } from "hono/cookie";
-import { findFriends, findUser } from "../utils/connection";
+
 import { faker } from "@faker-js/faker";
 import { uploadImage, validateImage } from "../utils/uploadImage";
+import { findFriends, findRelation, getStatus } from "../utils/relation";
+import { findUser } from "../utils/user";
+import { findRequest, findSentRequest } from "../utils/request";
 
 export const register = async (c: Context) => {
   try {
@@ -15,7 +18,7 @@ export const register = async (c: Context) => {
     const prisma = getPrisma(c);
 
     const hashedPassword = await bcrypt.hash(password, 12);
-    console.log(hashedPassword, "HI");
+
     const user = await prisma.user.create({
       data: {
         email,
@@ -161,26 +164,61 @@ export const aboutMe = async (c: Context) => {
     );
   }
 };
+
 export const getUser = async (c: Context) => {
+  const userId = c.get("userId");
   const targetId = c.req.param().profileId;
 
   if (!targetId) {
     return;
   }
-  console.log(targetId);
+
   const prisma = getPrisma(c);
   try {
-    const user = await findUser(prisma, targetId);
+    const [sentRequest, receivedRequest, user] = await Promise.all([
+      findSentRequest(prisma, userId, targetId),
+      findRequest(prisma, targetId, userId),
+      findUser(prisma, targetId),
+    ]);
 
     if (!user) {
-      return;
+      return c.json({ status: "error", message: "Invalid target ID" }, 404);
     }
+
+    if (sentRequest) {
+      return c.json({
+        status: "success",
+        message: "Request sent",
+        data: {
+          user,
+          requestId: sentRequest.requestId,
+          status: "PENDING_SENT",
+        },
+      });
+    }
+
+    if (receivedRequest) {
+      return c.json({
+        status: "success",
+        message: "Request received",
+        data: {
+          user,
+          requestId: receivedRequest.requestId,
+          status: "PENDING_RECEIVED",
+        },
+      });
+    }
+
+    const connection = await findRelation(prisma, userId, targetId);
+
+    let status = getStatus(connection, userId);
 
     return c.json({
       status: "success",
-      message: "User data received",
+      message: "Status retrieved",
       data: {
         user,
+        status,
       },
     });
   } catch (e) {

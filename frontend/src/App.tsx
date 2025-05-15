@@ -3,18 +3,26 @@ import {
   RouterProvider,
   Navigate,
 } from "react-router-dom";
-import Login from "./pages/Login";
-import Welcome from "./pages/Welcome";
-import Friends from "./pages/Friends";
-import Feed from "./pages/Feed";
-import Register from "./pages/Register";
-import Logout from "./pages/Logout";
-import NotFound from "./pages/NotFound";
-import User from "./pages/User";
+import Login from "./pages/auth/Login.tsx";
+import Welcome from "./pages/general/Welcome.tsx";
+
+import Feed from "./pages/app/Feed.tsx";
+
+import NotFound from "./pages/general/NotFound.tsx";
+import User from "./pages/users/Profile.tsx";
 import Self from "./components/User/Self";
 import Navbar from "./components/Navbar";
 import { useAuth } from "./hooks/useAuth.tsx";
-import Image from "./components/Post/Image.tsx";
+import Image from "./pages/Post/Image.tsx";
+import { Toaster } from "./components/ui/sonner.tsx";
+import Sent from "./pages/requests/Sent.tsx";
+import Received from "./pages/requests/Received.tsx";
+import Logout from "./pages/auth/Logout.tsx";
+import Register from "./pages/auth/Register.tsx";
+
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
 
 const App = () => {
   const Layout = ({ children }: { children: React.ReactNode }) => {
@@ -49,14 +57,7 @@ const App = () => {
         </Layout>
       ),
     },
-    {
-      path: "/friends",
-      element: (
-        <Layout>
-          <Friends />
-        </Layout>
-      ),
-    },
+
     {
       path: "/user/:userId",
       element: (
@@ -74,13 +75,28 @@ const App = () => {
       element: (
         <Layout>
           <Self />
+          <Toaster />
         </Layout>
       ),
+      children: [
+        {
+          path: "/me/sent",
+          element: <Sent />,
+        },
+        {
+          path: "/me/received",
+          element: <Received />,
+        },
+      ],
     },
     { path: "*", element: <NotFound /> },
   ]);
 
-  return <RouterProvider router={routers} />;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={routers} />
+    </QueryClientProvider>
+  );
 };
 
 export default App;
