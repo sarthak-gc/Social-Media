@@ -28,7 +28,7 @@ const LoginForm = () => {
         navigate("/feed");
       }
     } catch (err) {
-      setError(err as string);
+      if (err instanceof Error) setError(err.message);
     } finally {
       setIsLoading(false);
     }

@@ -1,4 +1,3 @@
-// components/RegisterForm.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,7 +41,7 @@ const RegisterForm = () => {
         navigate("/feed");
       }
     } catch (err) {
-      setError(err as string);
+      if (err instanceof Error) setError(err.message);
     } finally {
       setIsLoading(false);
     }

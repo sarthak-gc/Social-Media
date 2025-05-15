@@ -14,13 +14,13 @@ const Sent = () => {
     (async () => {
       setIsLoading(true);
       try {
-        const { data } = await fetchSentRequests();
+        const { data, status } = await fetchSentRequests();
 
-        if (data.status === "success") {
-          setSentRequests(data.data.requests);
+        if (status === "success") {
+          setSentRequests(data.requests);
         }
-      } catch (error) {
-        setError(error as string);
+      } catch (err) {
+        if (err instanceof Error) setError(err.message);
       } finally {
         setIsLoading(false);
       }

@@ -10,46 +10,43 @@ import {
   fetchUserPosts,
   fetchUserProfile,
 } from "@/services/user";
-import type { Post, UserI } from "../types/types";
+import type { PostI, UserI } from "../types/types";
+import { useQuery } from "@tanstack/react-query";
 
 const User = () => {
-  const [user, setUser] = useState<UserI | null>(null);
   const [friends, setFriends] = useState<UserI[]>([]);
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [error, setError] = useState("");
+
   const [activeTab, setActiveTab] = useState("posts");
   const { userId } = useParams();
 
+  const {
+    isPending: isPendingUser,
+    data: userData,
+    error: errorProfile,
+  } = useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      if (!userId) return;
+      const { data } = await fetchUserProfile(userId);
+      return data;
+    },
+    refetchInterval: 2500,
+  });
+
+  const {
+    isPending: isPendingPosts,
+    data: posts,
+    error: errorPosts,
+  } = useQuery({
+    queryKey: ["posts"],
+    queryFn: async () => {
+      if (!userId) return;
+      const { data } = await fetchUserPosts(userId);
+      return data.posts;
+    },
+    refetchInterval: 2500,
+  });
   useEffect(() => {
-    (async () => {
-      try {
-        if (!userId) return;
-
-        const { status, data } = await fetchUserProfile(userId);
-
-        if (status === "success") {
-          setUser(data.user);
-        }
-      } catch (error) {
-        setError("Failed to fetch user profile");
-        console.error("Error fetching user profile:", error);
-      }
-    })();
-    // const connectionStatus = async () => {
-    //   try {
-    //     const response = await axios.get(
-    //       `http://localhost:8787/connection/status/${userId}`,
-    //       {
-    //         withCredentials: true,
-    //       }
-    //     );
-    //   } catch (e) {
-    //     if (e instanceof AxiosError) {
-    //       console.log(e.response?.data);
-    //     }
-    //   }
-    // };
-
     (async () => {
       try {
         if (!userId) return;
@@ -59,43 +56,30 @@ const User = () => {
           setFriends(data.friends);
         }
       } catch (error) {
-        setError("Failed to fetch user friends");
         console.error("Error fetching user friends:", error);
-      }
-    })();
-    (async () => {
-      try {
-        if (!userId) return;
-        const { status, data } = await fetchUserPosts(userId);
-
-        if (status === "success") {
-          setPosts(data.posts);
-        }
-      } catch (error) {
-        setError("Failed to fetch user posts");
-        console.error("Error fetching user posts:", error);
       }
     })();
   }, [userId]);
 
-  if (error) {
+  if (errorProfile) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-600">{error}</p>
+        <p className="text-red-600">Failed to fetch user profile</p>
       </div>
     );
   }
 
-  if (!user) {
+  if (isPendingUser) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p>Loading...</p>
       </div>
     );
   }
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-      <UserCard user={user} />
+      <UserCard user={userData.user} connectionStatus={userData.status} />
 
       <div className="flex justify-center space-x-4 mb-6">
         <Button
@@ -128,8 +112,16 @@ const User = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {posts.length > 0 ? (
-              posts.map((post) => <PostCard key={post.postId} post={post} />)
+            {errorPosts ? (
+              <p className="text-center text-gray-500">
+                Error while fetching post.
+              </p>
+            ) : isPendingPosts ? (
+              <p className="text-center text-gray-500">Loading...</p>
+            ) : posts.length > 0 ? (
+              posts.map((post: PostI) => (
+                <PostCard key={post.postId} post={post} />
+              ))
             ) : (
               <p className="text-center text-gray-500">No posts available.</p>
             )}

@@ -2,12 +2,12 @@ import { AXIOS_USER } from "@/lib/axios";
 
 export const getPersonalData = async () => {
   try {
-    const response = await AXIOS_USER.get("user/me", {
+    const response = await AXIOS_USER.get("me", {
       withCredentials: true,
     });
     return response.data;
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 };
 
@@ -23,3 +23,6 @@ export const updateMe = async (
   });
   return response.data;
 };
+
+
+

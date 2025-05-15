@@ -1,13 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import {
-  Home,
-  User,
-  Bell,
-  LogIn,
-  LogOut,
-  UserPlus,
-} from "lucide-react";
+import { Home, User, Bell, LogIn, LogOut, UserPlus } from "lucide-react";
 
 const Navbar = () => {
   const isLoggedIn = true;

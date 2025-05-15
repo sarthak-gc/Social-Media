@@ -130,7 +130,7 @@ const Image = ({
   labelText: string;
 }) => {
   return (
-    <div>
+    <div className=" h-full w-full rounded-full">
       {pfp || newProfilePicToShow ? (
         <img
           src={newProfilePicToShow || pfp || ""}
@@ -138,7 +138,7 @@ const Image = ({
           className="w-full h-full rounded-full object-cover"
         />
       ) : (
-        <div className="w-full h-full rounded-full bg-black flex items-center justify-center">
+        <div className="w-full h-full rounded-full bg-black  flex items-center justify-center">
           <span className="text-4xl font-bold text-white">
             {name.charAt(0).toUpperCase()}
           </span>

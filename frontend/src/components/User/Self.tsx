@@ -16,6 +16,7 @@ const Self = () => {
     email: "",
     pfp: "",
   });
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [middleName, setMiddleName] = useState("");
@@ -53,11 +54,8 @@ const Self = () => {
         lastName,
         middleName,
       };
-      const { status } = await updateMe(
-        userData.firstName,
-        userData.middleName || "",
-        userData.lastName
-      );
+
+      const { status } = await updateMe(firstName, middleName || "", lastName);
       if (status === "success") {
         setUserData(updatedData);
         setIsEditing(false);

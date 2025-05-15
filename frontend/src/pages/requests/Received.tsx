@@ -1,34 +1,24 @@
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import FriendRequestReceived from "@/components/User/Friends/FriendRequestReceived";
 import { fetchPendingRequests } from "@/services/requests";
 import type { ReceivedFriendRequestI } from "../types/types";
+import { useQuery } from "@tanstack/react-query";
 
 const Received = () => {
-  const [pendingRequests, setPendingRequests] = useState<
-    ReceivedFriendRequestI[]
-  >([]);
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const {
+    isPending,
+    error,
+    data: pendingRequests,
+  } = useQuery({
+    queryKey: ["received-requests"],
+    queryFn: async () => {
+      const { data } = await fetchPendingRequests();
+      return data.requests;
+    },
+    refetchInterval: 2500,
+  });
 
-  useEffect(() => {
-    (async () => {
-      setIsLoading(true);
-      try {
-        const { data } = await fetchPendingRequests();
-
-        if (data.status === "success") {
-          setPendingRequests(data.data.requests);
-        }
-      } catch (error) {
-        setError(error as string);
-      } finally {
-        setIsLoading(false);
-      }
-    })();
-  }, []);
-
-  if (isLoading) {
+  if (isPending) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p>Loading...</p>
@@ -39,7 +29,7 @@ const Received = () => {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-600">{error}</p>
+        <p className="text-red-600">{error.message}</p>
       </div>
     );
   }
@@ -54,7 +44,7 @@ const Received = () => {
 
       <CardContent className="">
         {pendingRequests.length > 0 ? (
-          pendingRequests.map((request) => (
+          pendingRequests.map((request: ReceivedFriendRequestI) => (
             <FriendRequestReceived key={request.senderId} request={request} />
           ))
         ) : (

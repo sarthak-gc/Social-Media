@@ -3,63 +3,75 @@ import { Button } from "@/components/ui/button";
 
 import ProfileImage from "./Pfp";
 import Name from "./Name";
-import axios from "axios";
+
 import { useEffect, useState } from "react";
 import type { UserI } from "@/pages/types/types";
 import {
   acceptFriendRequest,
+  cancelFriendRequest,
   getConnectionStatus,
   rejectFriendRequest,
   sendRequest,
+  unFriend,
 } from "@/services/connections";
 import { toast } from "sonner";
+import PendingRequest from "@/components/Requests/PendingRequest";
+import RequestReceived from "@/components/Requests/RequestReceived";
+import SendingRequest from "@/components/Requests/SentRequest";
+import Blocked from "@/components/Requests/Blocked";
 
-const UserCard = ({ user }: { user: UserI }) => {
+const UserCard = ({
+  user,
+  connectionStatus,
+}: {
+  user: UserI;
+  connectionStatus: string;
+}) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [requestSent, setRequestSent] = useState(false);
+
   const [friendshipStatus, setFriendShipStatus] = useState<
-    "PENDING" | "FRIENDS" | "RECEIVED" | "BLOCKED_BY_YOU" | "BLOCKED_YOU" | null
+    | "PENDING_SENT"
+    | "PENDING_RECEIVED"
+    | "FRIENDS"
+    | "BLOCKED_BY_YOU"
+    | "BLOCKED_YOU"
+    | null
   >(null);
 
+  console.log(connectionStatus);
   const [requestId, setRequestId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (connectionStatus == "PENDING_SENT") {
+      setFriendShipStatus("PENDING_SENT");
+    } else if (connectionStatus == "PENDING_RECEIVED")
+      setFriendShipStatus("PENDING_RECEIVED");
+    else if (connectionStatus == "FRIENDS") setFriendShipStatus("FRIENDS");
+    else if (connectionStatus == "BLOCKED_BY_YOU")
+      setFriendShipStatus("BLOCKED_BY_YOU");
+    else if (connectionStatus == "BLOCKED_YOU")
+      setFriendShipStatus("BLOCKED_YOU");
+    else if (connectionStatus == null) setFriendShipStatus(null);
+  }, [connectionStatus]);
 
   useEffect(() => {
     (async () => {
       try {
-        const { data, message } = await getConnectionStatus(user.userId);
-
-        if (message === "Request sent") {
-          setFriendShipStatus("PENDING");
-          setRequestId(data.requestId);
-        } else if (message === "Request received") {
-          setFriendShipStatus("RECEIVED");
-          setRequestId(data.requestId);
-        } else if (message === "No relation") {
-          setFriendShipStatus(null);
-        } else if (message === "Friends") {
-          setFriendShipStatus("FRIENDS");
-          setRequestId(data.requestId);
-        } else if (message === "You blocked the user") {
-          setFriendShipStatus("BLOCKED_BY_YOU");
-          setRequestId(data.requestId);
-        } else if (message === "You are blocked by the user") {
-          setFriendShipStatus("BLOCKED_YOU");
+        const { data } = await getConnectionStatus(user.userId);
+        if (data.requestId) {
           setRequestId(data.requestId);
         }
       } catch (e) {
         console.error(e);
       }
     })();
-  }, [user.userId]);
+  }, [user.userId, connectionStatus]);
 
   const handleSendRequest = async () => {
     setIsLoading(true);
     try {
-      const { status } = await sendRequest(user.userId);
-
-      if (status === "success") {
-        setRequestSent(true);
-      }
+      await sendRequest(user.userId);
+      setFriendShipStatus("PENDING_SENT");
     } catch (error) {
       console.error("Error sending friend request:", error);
     } finally {
@@ -97,6 +109,31 @@ const UserCard = ({ user }: { user: UserI }) => {
     }
   };
 
+  const cancelRequest = async () => {
+    setIsLoading(true);
+    try {
+      if (!requestId) return;
+      await cancelFriendRequest(requestId);
+      setFriendShipStatus(null);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const removeRelation = async () => {
+    try {
+      await unFriend(user.userId);
+      setFriendShipStatus(null);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const unblockUser = async () => {
+    console.log("USER UNBLOCKED");
+  };
   return (
     <div>
       <Card className="max-w-2xl mx-auto">
@@ -119,211 +156,26 @@ const UserCard = ({ user }: { user: UserI }) => {
             middleName={user.middleName}
             email={user.email}
           />
+
           <div className="flex justify-center">
             {friendshipStatus === "FRIENDS" ? (
-              <Button variant="secondary" disabled>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="lucide lucide-user-check"
-                >
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="m15 15 6 6L23 17" />
-                </svg>
-                Friends
-              </Button>
-            ) : friendshipStatus === "PENDING" ? (
-              <Button
-                variant="secondary"
-                disabled={isLoading}
-                onClick={async () => {
-                  setIsLoading(true);
-                  try {
-                    await axios.put(
-                      `http://localhost:8787/connection/cancel/request/${requestId}`,
-                      {},
-                      {
-                        withCredentials: true,
-                      }
-                    );
-                    setRequestSent(false);
-                    setFriendShipStatus(null);
-                  } catch (e) {
-                    console.error(e);
-                  } finally {
-                    setIsLoading(false);
-                  }
-                }}
-              >
-                {isLoading ? (
-                  <>
-                    <svg
-                      className="animate-spin h-5 w-5 mr-2"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Cancelling...
-                  </>
-                ) : (
-                  <>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="lucide lucide-user-minus"
-                    >
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                      <circle cx="9" cy="7" r="4" />
-                      <line x1="2" x2="10" y1="15" y2="15" />
-                    </svg>
-                    Cancel Request
-                  </>
-                )}
-              </Button>
-            ) : friendshipStatus === "RECEIVED" ? (
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={rejectRequest}>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="lucide lucide-user-plus"
-                  >
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <line x1="19" x2="19" y1="1" y2="7" />
-                    <line x1="16" x2="22" y1="4" y2="4" />
-                  </svg>
-                  Accept
-                </Button>
-                <Button variant="outline" onClick={acceptRequest}>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="lucide lucide-user-minus"
-                  >
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <line x1="2" x2="10" y1="15" y2="15" />
-                  </svg>
-                  Reject
-                </Button>
-              </div>
+              <Friends removeRelation={removeRelation} />
+            ) : friendshipStatus === "PENDING_SENT" ? (
+              <PendingRequest
+                cancelRequest={cancelRequest}
+                isLoading={isLoading}
+              />
+            ) : friendshipStatus === "PENDING_RECEIVED" ? (
+              <RequestReceived
+                acceptRequest={acceptRequest}
+                rejectRequest={rejectRequest}
+              />
             ) : friendshipStatus === "BLOCKED_BY_YOU" ||
               friendshipStatus === "BLOCKED_YOU" ? (
-              <Button variant="destructive" disabled>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="lucide lucide-user-x"
-                >
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <line x1="18" x2="22" y1="6" y2="2" />
-                  <line x1="22" x2="18" y1="6" y2="2" />
-                </svg>
-                Blocked
-              </Button>
+              <Blocked status={friendshipStatus} handleUnblock={unblockUser} />
             ) : (
-              <Button
-                onClick={handleSendRequest}
-                disabled={isLoading || requestSent}
-              >
-                {isLoading ? (
-                  <>
-                    <svg
-                      className="animate-spin h-5 w-5 mr-2"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Sending Request...
-                  </>
-                ) : (
-                  <>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="lucide lucide-user-plus"
-                    >
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                      <circle cx="9" cy="7" r="4" />
-                      <line x1="19" x2="19" y1="1" y2="7" />
-                      <line x1="16" x2="22" y1="4" y2="4" />
-                    </svg>
-                    Add Friend
-                  </>
-                )}
+              <Button onClick={handleSendRequest} disabled={isLoading}>
+                {isLoading ? <SendingRequest /> : <Action />}
               </Button>
             )}
           </div>
@@ -334,3 +186,78 @@ const UserCard = ({ user }: { user: UserI }) => {
 };
 
 export default UserCard;
+
+const Friends = ({ removeRelation }: { removeRelation: () => void }) => {
+  return (
+    <div className=" gap-4 flex">
+      <Button variant="secondary" disabled>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="lucide lucide-user-check"
+        >
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="m15 15 6 6L23 17" />
+        </svg>
+        Friends
+      </Button>
+      <Button
+        variant="secondary"
+        onClick={() => {
+          removeRelation();
+        }}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="lucide lucide-user-check"
+        >
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="m15 15 6 6L23 17" />
+        </svg>
+        Remove
+      </Button>
+    </div>
+  );
+};
+
+const Action = () => {
+  return (
+    <>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="lucide lucide-user-plus"
+      >
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <line x1="19" x2="19" y1="1" y2="7" />
+        <line x1="16" x2="22" y1="4" y2="4" />
+      </svg>
+      Add friend
+    </>
+  );
+};

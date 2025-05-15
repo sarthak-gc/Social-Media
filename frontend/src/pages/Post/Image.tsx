@@ -13,12 +13,12 @@ const Image = () => {
       if (!image && imageId) {
         try {
           const { status, data } = await getImage(imageId);
-          console.log(status, data);
+
           if (status == "success") {
             setImageUrl(data.imageUrl);
           }
         } catch (e) {
-          console.log(e);
+          console.error(e);
         }
       } else {
         setImageUrl(image);

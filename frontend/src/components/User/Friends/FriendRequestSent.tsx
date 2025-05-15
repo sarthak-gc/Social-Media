@@ -13,7 +13,7 @@ const FriendRequestSent = ({ request }: { request: SentFriendRequestI }) => {
       const { status } = await cancelFriendRequest(request.requestId);
 
       if (status === "success") {
-        toast.success("Friend request accepted");
+        toast.success("Friend request cancelled");
       }
     } catch (e) {
       console.error(e);
