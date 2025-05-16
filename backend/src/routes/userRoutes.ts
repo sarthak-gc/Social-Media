@@ -22,7 +22,7 @@ userRoutes.post("/register", register);
 userRoutes.use(authenticate);
 userRoutes.get("/profile/:profileId", getUser);
 userRoutes.get("/people/:name", getUsers);
-userRoutes.get("/friends/:profileId", getFriends); // not checked
+userRoutes.get("/friends/:profileId", getFriends);
 
 userRoutes.get("/me", aboutMe);
 // userRoutes.get("/seed", seed);

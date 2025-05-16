@@ -30,7 +30,7 @@ export const uploadPost = async (formData: FormData) => {
   }
 };
 
-export const getPosts = async () => {
+export const getFeed = async () => {
   try {
     const response = await AXIOS_CONTENT.get("feed");
     return response.data;

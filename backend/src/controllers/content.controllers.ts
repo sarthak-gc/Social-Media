@@ -3,6 +3,8 @@ import { getPrisma } from "../utils/getPrisma";
 
 import { uploadImage, validateImage } from "../utils/uploadImage";
 import { findUser } from "../utils/user";
+import { findFriends } from "../utils/relation";
+import { NotificationType } from "../generated/prisma";
 
 export const addPost = async (c: Context) => {
   const userId = c.get("userId");
@@ -31,8 +33,8 @@ export const addPost = async (c: Context) => {
     }
     const prisma = getPrisma(c);
 
-    const transaction = await prisma.$transaction(async (prisma) => {
-      const post = await prisma.post.create({
+    const transaction = await prisma.$transaction(async (p) => {
+      const post = await p.post.create({
         data: {
           posterId: userId,
           title,
@@ -42,13 +44,27 @@ export const addPost = async (c: Context) => {
       if (image) {
         result = await uploadImage(formDataToSend);
 
-        await prisma.image.create({
+        await p.image.create({
           data: {
             postId: post.postId,
             url: result.secure_url,
           },
         });
       }
+
+      const friends = await findFriends(prisma, userId);
+      const friendsId: string[] = friends.map((friend) => friend.userId);
+
+      const notificationsData = friendsId.map((friendId) => ({
+        type: NotificationType.POST,
+        receiverId: friendId,
+        creatorId: userId,
+        postId: post.postId,
+      }));
+
+      await p.notification.createMany({
+        data: notificationsData,
+      });
 
       return { post, result: result ? result.secure_url : "" };
     });

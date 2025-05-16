@@ -21,6 +21,7 @@ import Logout from "./pages/auth/Logout.tsx";
 import Register from "./pages/auth/Register.tsx";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import Notifications from "./pages/users/Notifications.tsx";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +70,14 @@ const App = () => {
     {
       path: "/image/:imageId",
       element: <Image />,
+    },
+    {
+      path: "/notifications",
+      element: (
+        <Layout>
+          <Notifications />
+        </Layout>
+      ),
     },
     {
       path: "/me",

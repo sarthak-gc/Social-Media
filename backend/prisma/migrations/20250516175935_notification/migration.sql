@@ -4,6 +4,9 @@ CREATE TYPE "RequestStatus" AS ENUM ('ACCEPTED', 'REJECTED', 'PENDING');
 -- CreateEnum
 CREATE TYPE "RelationType" AS ENUM ('FRIENDS', 'UNFRIENDED', 'BLOCKED_BY_SENDER', 'BLOCKED_BY_RECEIVER');
 
+-- CreateEnum
+CREATE TYPE "NotificationType" AS ENUM ('POST', 'REQUEST_SENT', 'REQUEST_ACCEPTED');
+
 -- CreateTable
 CREATE TABLE "User" (
     "userId" TEXT NOT NULL,
@@ -57,6 +60,16 @@ CREATE TABLE "Image" (
     "url" TEXT NOT NULL
 );
 
+-- CreateTable
+CREATE TABLE "Notification" (
+    "notificationId" TEXT NOT NULL,
+    "type" "NotificationType" NOT NULL,
+    "creatorId" TEXT NOT NULL,
+    "receiverId" TEXT NOT NULL,
+    "isRead" BOOLEAN NOT NULL DEFAULT false,
+    "postId" TEXT
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_userId_key" ON "User"("userId");
 
@@ -78,6 +91,9 @@ CREATE UNIQUE INDEX "Post_postId_key" ON "Post"("postId");
 -- CreateIndex
 CREATE UNIQUE INDEX "Image_imageId_key" ON "Image"("imageId");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Notification_notificationId_key" ON "Notification"("notificationId");
+
 -- AddForeignKey
 ALTER TABLE "Request" ADD CONSTRAINT "Request_receiverId_fkey" FOREIGN KEY ("receiverId") REFERENCES "User"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -95,3 +111,9 @@ ALTER TABLE "Post" ADD CONSTRAINT "Post_posterId_fkey" FOREIGN KEY ("posterId") 
 
 -- AddForeignKey
 ALTER TABLE "Image" ADD CONSTRAINT "Image_postId_fkey" FOREIGN KEY ("postId") REFERENCES "Post"("postId") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_creatorId_fkey" FOREIGN KEY ("creatorId") REFERENCES "User"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_receiverId_fkey" FOREIGN KEY ("receiverId") REFERENCES "User"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;

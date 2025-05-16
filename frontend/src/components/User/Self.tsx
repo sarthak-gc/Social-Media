@@ -5,8 +5,11 @@ import { Input } from "@/components/ui/input";
 import ProfileImage from "./Card/Pfp";
 import FriendList from "./Friends/FriendList";
 import { Link, Outlet } from "react-router-dom";
-import type { UserI } from "@/pages/types/types";
+import type { PostI, UserI } from "@/pages/types/types";
 import { getPersonalData, updateMe } from "@/services/me";
+import { fetchUserPosts } from "@/services/user";
+import PostCard from "../Post/Card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Self = () => {
   const [userData, setUserData] = useState<UserI>({
@@ -22,14 +25,18 @@ const Self = () => {
   const [middleName, setMiddleName] = useState("");
 
   const [friends, setFriends] = useState<UserI[]>([]);
+  const [posts, setPosts] = useState<PostI[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("posts");
 
   useEffect(() => {
     (async () => {
       setIsLoading(true);
       try {
         const { status, data } = await getPersonalData();
+        const { data: posts } = await fetchUserPosts(data.me.userId);
+
         if (status === "success") {
           const user = data.me;
           setUserData(user);
@@ -37,6 +44,7 @@ const Self = () => {
           setLastName(user.lastName);
           setMiddleName(user.middleName);
           setFriends(data.friends);
+          setPosts(posts.posts);
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -134,8 +142,20 @@ const Self = () => {
             </div>
           </CardContent>
         </Card>
-
-        <FriendList friends={friends} />
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="posts">Posts</TabsTrigger>
+            <TabsTrigger value="friends">Friends</TabsTrigger>
+          </TabsList>
+          <TabsContent value="posts">
+            {posts.map((post) => (
+              <PostCard post={post} key={post.postId} />
+            ))}
+          </TabsContent>
+          <TabsContent value="friends">
+            <FriendList friends={friends} />
+          </TabsContent>
+        </Tabs>
       </div>
       <div className="w-1/3">
         <Card className="h-[90vh] overflow-auto px-10">

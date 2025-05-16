@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { authenticate } from "../middlewares/authentication";
 import {
   acceptFriendRequest,
   cancelFriendRequest,
@@ -9,8 +8,6 @@ import {
   sendRequest,
 } from "../controllers/request.controllers";
 const requestRoutes = new Hono();
-
-requestRoutes.use(authenticate);
 requestRoutes.post("/send/:profileId", sendRequest);
 requestRoutes.get("/pending/received", getReceivedRequests);
 requestRoutes.get("/pending/sent", getSentRequests);

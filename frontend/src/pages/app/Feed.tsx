@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import PostCard from "@/components/Post/Card";
-import { getPosts } from "@/services/posts";
+import { getFeed } from "@/services/posts";
 import { useQuery } from "@tanstack/react-query";
 import type { PostI, UserI } from "../types/types";
 import { getPeople } from "@/services/user";
@@ -17,7 +17,7 @@ const Feed = () => {
   const { isPending, error, data } = useQuery({
     queryKey: ["feed-posts"],
     queryFn: async () => {
-      const { data } = await getPosts();
+      const { data } = await getFeed();
       return data.posts;
     },
     refetchInterval: 10000,
@@ -59,7 +59,7 @@ const Feed = () => {
       </div>
 
       {showAddPost && (
-        <AddPost onPostAdded={getPosts} setShowAddPost={setShowAddPost} />
+        <AddPost onPostAdded={getFeed} setShowAddPost={setShowAddPost} />
       )}
       {error && <div className="text-red-600 mb-4">{error}</div>}
 

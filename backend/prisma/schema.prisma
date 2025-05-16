@@ -71,6 +71,7 @@ model Notification {
   creatorId      String
   receiverId     String
   isRead         Boolean          @default(false)
+  postId         String?
 
   creator  User @relation("creator", references: [userId], fields: [creatorId])
   receiver User @relation("receiver", references: [userId], fields: [receiverId])

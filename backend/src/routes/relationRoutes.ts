@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { authenticate } from "../middlewares/authentication";
 
 import {
   blockUser,
@@ -11,7 +10,6 @@ import {
 import { getFriends } from "../controllers/user.controllers";
 const relationRoutes = new Hono();
 
-relationRoutes.use(authenticate);
 relationRoutes.get("/friends/all", getFriends);
 relationRoutes.put("/unfriend/:profileId", unFriend);
 relationRoutes.put("/block/:profileId", blockUser);

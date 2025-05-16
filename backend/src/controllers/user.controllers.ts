@@ -268,14 +268,34 @@ export const changePfp = async (c: Context) => {
   try {
     const result = await uploadImage(formDataToSend);
 
-    await prisma.user.update({
-      where: {
-        userId,
-      },
-      data: {
-        pfp: result.secure_url,
-      },
+    await prisma.$transaction(async () => {
+      const post = await prisma.post.create({
+        data: {
+          posterId: userId,
+          title: "Uploaded Profile Picture",
+        },
+      });
+
+      const user = await prisma.user.update({
+        where: {
+          userId,
+        },
+        data: {
+          pfp: result.secure_url,
+        },
+      });
+
+      if (!user.pfp) {
+        return;
+      }
+      await prisma.image.create({
+        data: {
+          postId: post.postId,
+          url: user.pfp,
+        },
+      });
     });
+
     return c.json({
       status: "success",
       message: "Pfp uploaded",
@@ -420,5 +440,24 @@ export const seed = async (c: Context) => {
     return c.text("Failed");
   } finally {
     await prisma.$disconnect();
+  }
+};
+
+export const myPosts = async (c: Context) => {
+  const userId = c.get("userId");
+  const prisma = getPrisma(c);
+
+  try {
+    const posts = await prisma.post.findMany({
+      where: {
+        posterId: userId,
+      },
+    });
+    return posts;
+  } catch (e) {
+    return c.json(
+      { status: "error", message: "An unexpected error occurred" },
+      500
+    );
   }
 };

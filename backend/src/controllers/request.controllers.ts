@@ -13,6 +13,7 @@ import {
   rejectRequest,
 } from "../utils/request";
 import { createRelation, findRelation } from "../utils/relation";
+import { NotificationType } from "../generated/prisma";
 
 export const sendRequest = async (c: Context) => {
   const senderId = c.get("userId");
@@ -73,7 +74,18 @@ export const sendRequest = async (c: Context) => {
         409
       );
     }
-    await createRequest(prisma, senderId, receiverId);
+    await prisma.$transaction(async (p) => {
+      return Promise.all([
+        createRequest(prisma, senderId, receiverId),
+        p.notification.create({
+          data: {
+            type: NotificationType.REQUEST_SENT,
+            creatorId: senderId,
+            receiverId,
+          },
+        }),
+      ]);
+    });
     return c.json({ status: "success", message: "Request sent successfully" });
   } catch (e) {
     return c.json(
@@ -151,6 +163,13 @@ export const acceptFriendRequest = async (c: Context) => {
     await prisma.$transaction(async () => {
       await acceptRequest(prisma, requestId);
       await createRelation(prisma, userId, request.senderId);
+      await prisma.notification.create({
+        data: {
+          type: NotificationType.REQUEST_ACCEPTED,
+          creatorId: userId,
+          receiverId: request.senderId,
+        },
+      });
     });
 
     return c.json({
