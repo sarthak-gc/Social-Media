@@ -10,19 +10,21 @@ datasource db {
 }
 
 model User {
-  userId           String     @id @unique @default(uuid())
-  password         String
-  pfp              String?
-  firstName        String
-  middleName       String?
-  lastName         String
-  email            String     @unique
-  createdAt        DateTime   @default(now())
-  posts            Post[]     @relation("UserPosts")
-  relationsByThem  Relation[] @relation("friendsByThem")
-  relationsByMe    Relation[] @relation("friendsByMe")
-  requestsReceived Request[]  @relation("requestsReceived")
-  requestsSent     Request[]  @relation("requestsSent")
+  userId               String         @id @unique @default(uuid())
+  password             String
+  pfp                  String?
+  firstName            String
+  middleName           String?
+  lastName             String
+  email                String         @unique
+  createdAt            DateTime       @default(now())
+  posts                Post[]         @relation("UserPosts")
+  relationsByThem      Relation[]     @relation("friendsByThem")
+  relationsByMe        Relation[]     @relation("friendsByMe")
+  requestsReceived     Request[]      @relation("requestsReceived")
+  requestsSent         Request[]      @relation("requestsSent")
+  NotificationCreated  Notification[] @relation("creator")
+  NotificationReceived Notification[] @relation("receiver")
 }
 
 model Request {
@@ -63,6 +65,17 @@ model Image {
   Post    Post   @relation(fields: [postId], references: [postId])
 }
 
+model Notification {
+  notificationId String           @unique @default(uuid())
+  type           NotificationType
+  creatorId      String
+  receiverId     String
+  isRead         Boolean          @default(false)
+
+  creator  User @relation("creator", references: [userId], fields: [creatorId])
+  receiver User @relation("receiver", references: [userId], fields: [receiverId])
+}
+
 enum RequestStatus {
   ACCEPTED
   REJECTED
@@ -74,4 +87,10 @@ enum RelationType {
   UNFRIENDED
   BLOCKED_BY_SENDER
   BLOCKED_BY_RECEIVER
+}
+
+enum NotificationType {
+  POST
+  REQUEST_SENT
+  REQUEST_ACCEPTED
 }

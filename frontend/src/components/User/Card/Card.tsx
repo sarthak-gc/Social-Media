@@ -58,7 +58,10 @@ const UserCard = ({
     (async () => {
       try {
         const { data } = await getConnectionStatus(user.userId);
+
         if (data.requestId) {
+          console.log(data.requestId);
+          console.log("HIHI");
           setRequestId(data.requestId);
         }
       } catch (e) {

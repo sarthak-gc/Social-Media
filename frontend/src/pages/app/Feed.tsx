@@ -20,7 +20,7 @@ const Feed = () => {
       const { data } = await getPosts();
       return data.posts;
     },
-    refetchInterval: 2500,
+    refetchInterval: 10000,
   });
 
   useEffect(() => {
