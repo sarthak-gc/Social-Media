@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { getAllNotifications } from "@/services/user";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import type { NotificationI } from "../types/types";
 
 const Notifications = () => {
   const {
@@ -29,7 +30,7 @@ const Notifications = () => {
       <h1>
         {console.log(notifications)}
         {notifications.length > 0
-          ? notifications.map((notification) => {
+          ? notifications.map((notification: NotificationI) => {
               return (
                 <Link to={`/user/${notification.creator.userId}`}>
                   <Card

@@ -51,3 +51,13 @@ export interface PfpPropI {
   name: string;
   editable: boolean;
 }
+export interface NotificationI {
+  notificationId: string;
+  type: "POST" | "REQUEST_SENT" | "REQUEST_ACCEPTED";
+  creatorId: string;
+  receiverId: string;
+  isRead: boolean;
+  postId?: string;
+  creator: UserI;
+  receiver: UserI;
+}
