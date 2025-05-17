@@ -144,6 +144,7 @@ export const aboutMe = async (c: Context) => {
         email: true,
         lastName: true,
         firstName: true,
+        middleName: true,
         pfp: true,
       },
     });
