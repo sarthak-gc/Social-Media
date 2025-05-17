@@ -25,14 +25,15 @@ const RegisterForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     setIsLoading(true);
     try {
       const { status, data } = await register(
         form.firstName,
-        form.middleName,
         form.lastName,
         form.email,
-        form.password
+        form.password,
+        form.middleName
       );
 
       if (status === "success") {

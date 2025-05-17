@@ -15,10 +15,10 @@ export const login = async (email: string, password: string) => {
   }
 };
 export const register = async (
-  email: string,
-  password: string,
   firstName: string,
   lastName: string,
+  email: string,
+  password: string,
   middleName?: string
 ) => {
   try {

@@ -6,6 +6,7 @@ const relationUrl = import.meta.env.VITE_RELATION_URL;
 const requestUrl = import.meta.env.VITE_REQUEST_URL;
 const notificationUrl = import.meta.env.VITE_NOTIFICATION_URL;
 
+console.log(userUrl);
 export const AXIOS_USER = axios.create({
   baseURL: userUrl,
   withCredentials: true,

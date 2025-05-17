@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { AXIOS_USER } from "@/lib/axios";
 
 export const useAuth = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -8,7 +8,7 @@ export const useAuth = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await axios.get("http://localhost:8787/user/me", {
+        const response = await AXIOS_USER.get("me", {
           withCredentials: true,
         });
 
