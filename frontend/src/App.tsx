@@ -23,13 +23,20 @@ import Register from "./pages/auth/Register.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Notifications from "./pages/users/Notifications.tsx";
 import Post from "./pages/Post/Post.tsx";
+import { useEffect } from "react";
+import useUserStore from "./store/userStore.ts";
 
 const queryClient = new QueryClient();
 
 const App = () => {
+  const fetchNotifications = useUserStore().fetchNotifications;
   const Layout = ({ children }: { children: React.ReactNode }) => {
     const { isLoggedIn, loading } = useAuth();
-
+    useEffect(() => {
+      setInterval(() => {
+        fetchNotifications();
+      }, 1000);
+    }, []);
     if (loading) {
       return <div>Loading...</div>;
     }

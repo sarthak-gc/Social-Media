@@ -37,10 +37,9 @@ const useUserStore = create<UserStore>()(
         set({ isPending: true });
         try {
           const response = await getAllNotifications();
-          if (!response.ok) {
-            throw new Error("Failed to fetch notifications");
-          }
-          const notifications = await response.json();
+
+          const notifications = response.data.notifications;
+
           set({ notifications });
         } catch (error) {
           set({

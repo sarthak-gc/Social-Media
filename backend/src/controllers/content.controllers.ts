@@ -11,6 +11,7 @@ export const addPost = async (c: Context) => {
 
   try {
     // const { title } = (await c.req.json()) || null;
+    
     const formData = await c.req.formData();
     const title = formData.get("title") as string;
 
