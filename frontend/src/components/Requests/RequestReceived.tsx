@@ -9,7 +9,11 @@ const RequestReceived = ({
 }) => {
   return (
     <div className="flex gap-2">
-      <Button variant="outline" onClick={acceptRequest}>
+      <Button
+        variant="outline"
+        onClick={acceptRequest}
+        className="hover:bg-secondary"
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="24"
@@ -29,7 +33,11 @@ const RequestReceived = ({
         </svg>
         Accept
       </Button>
-      <Button variant="outline" onClick={rejectRequest}>
+      <Button
+        className="hover:bg-secondary"
+        variant="outline"
+        onClick={rejectRequest}
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="24"

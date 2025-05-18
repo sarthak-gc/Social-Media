@@ -238,6 +238,13 @@ export const cancelFriendRequest = async (c: Context) => {
   }
   try {
     await cancelRequest(prisma, requestId);
+    await prisma.notification.deleteMany({
+      where: {
+        creatorId: userId,
+        receiverId: request.receiverId,
+        type: "REQUEST_SENT",
+      },
+    });
     return c.json({
       status: "success",
       message: "Request Cancelled",

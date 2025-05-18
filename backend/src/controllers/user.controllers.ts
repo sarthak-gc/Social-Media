@@ -19,6 +19,17 @@ export const register = async (c: Context) => {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
+    const userExists = await prisma.user.findFirst({
+      where: {
+        email,
+      },
+    });
+    if (userExists) {
+      return c.json(
+        { status: "error", message: "Try with a different email" },
+        500
+      );
+    }
     const user = await prisma.user.create({
       data: {
         email,

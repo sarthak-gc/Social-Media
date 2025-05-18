@@ -16,6 +16,7 @@ export interface PostI {
     url: string;
   }[];
   user: {
+    userId: string;
     firstName: string;
     lastName: string;
     pfp: string;

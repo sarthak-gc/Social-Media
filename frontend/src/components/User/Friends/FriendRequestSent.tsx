@@ -6,7 +6,13 @@ import { X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
-const FriendRequestSent = ({ request }: { request: SentFriendRequestI }) => {
+const FriendRequestSent = ({
+  request,
+  handleRemoveRequest,
+}: {
+  request: SentFriendRequestI;
+  handleRemoveRequest: (requestId: string) => void;
+}) => {
   const cancelRequest = async () => {
     try {
       if (!request.requestId) return;
@@ -14,6 +20,7 @@ const FriendRequestSent = ({ request }: { request: SentFriendRequestI }) => {
 
       if (status === "success") {
         toast.success("Friend request cancelled");
+        handleRemoveRequest(request.requestId);
       }
     } catch (e) {
       console.error(e);

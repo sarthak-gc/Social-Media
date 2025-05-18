@@ -33,7 +33,7 @@ const Welcome = () => {
           <div className="flex flex-col space-y-4">
             <Button
               onClick={() => navigate("/register")}
-              className="w-full bg-black hover:bg-gray-800 transition-all duration-300 py-6 text-lg"
+              className="w-full hover:bg-secondary transition-all duration-300 py-6 text-lg"
             >
               Create an Account
             </Button>
@@ -41,7 +41,7 @@ const Welcome = () => {
             <Button
               onClick={() => navigate("/login")}
               variant="outline"
-              className="w-full border-2 border-black hover:bg-black hover:text-white transition-all duration-300 py-6 text-lg"
+              className="w-full border-2 hover:bg-secondary  hover:text-white transition-all duration-300 py-6 text-lg"
             >
               Sign In
             </Button>

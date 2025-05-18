@@ -23,64 +23,61 @@ export const addPost = async (c: Context) => {
         message: "Nothing to post",
       });
     }
+    const prisma = getPrisma(c);
+
+    const post = await prisma.post.create({
+      data: {
+        posterId: userId,
+        title,
+      },
+    });
+    let result;
 
     if (image) {
       if (!(image instanceof File)) {
         return c.json({ msg: "invalid" });
       }
-
       formDataToSend = await validateImage(image);
-    }
-    const prisma = getPrisma(c);
 
-    const transaction = await prisma.$transaction(async (p) => {
-      const post = await p.post.create({
+      result = await uploadImage(formDataToSend);
+
+      await prisma.image.create({
         data: {
-          posterId: userId,
-          title,
+          postId: post.postId,
+          url: result.secure_url,
         },
       });
-      let result;
-      if (image) {
-        result = await uploadImage(formDataToSend);
+    }
 
-        await p.image.create({
-          data: {
-            postId: post.postId,
-            url: result.secure_url,
-          },
-        });
-      }
+    const friends = await findFriends(prisma, userId);
+    const friendsId: string[] = friends.map((friend) => friend.userId);
 
-      const friends = await findFriends(prisma, userId);
-      const friendsId: string[] = friends.map((friend) => friend.userId);
+    const notificationsData = friendsId.map((friendId) => ({
+      type: NotificationType.POST,
+      receiverId: friendId,
+      creatorId: userId,
+      postId: post.postId,
+    }));
 
-      const notificationsData = friendsId.map((friendId) => ({
-        type: NotificationType.POST,
-        receiverId: friendId,
-        creatorId: userId,
-        postId: post.postId,
-      }));
-
-      await p.notification.createMany({
-        data: notificationsData,
-      });
-
-      return { post, result: result ? result.secure_url : "" };
+    await prisma.notification.createMany({
+      data: notificationsData,
     });
 
     return c.json({
       status: "success",
       message: "Post uploaded",
       data: {
-        postId: transaction.post.postId,
-        url: transaction.result,
+        postId: post.postId,
+        url: result ? result.secure_url : "",
       },
     });
   } catch (e) {
     console.log("Error during file upload:", e);
-    // @ts-expect-error
-    return c.json({ msg: "Upload failed", error: e.message }, 500);
+
+    return c.json(
+      { status: "error", message: "An unexpected error occurred" },
+      500
+    );
   }
 };
 export const getPosts = async (c: Context) => {
@@ -148,6 +145,8 @@ export const getFeed = async (c: Context) => {
           firstName: true,
           lastName: true,
           pfp: true,
+          middleName: true,
+          userId: true,
         },
       },
     },

@@ -22,6 +22,7 @@ import Register from "./pages/auth/Register.tsx";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Notifications from "./pages/users/Notifications.tsx";
+import Post from "./pages/Post/Post.tsx";
 
 const queryClient = new QueryClient();
 
@@ -76,6 +77,14 @@ const App = () => {
       element: (
         <Layout>
           <Notifications />
+        </Layout>
+      ),
+    },
+    {
+      path: "/post/:postId",
+      element: (
+        <Layout>
+          <Post />
         </Layout>
       ),
     },

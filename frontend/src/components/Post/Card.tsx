@@ -9,21 +9,26 @@ const PostCard = ({ post }: { post: PostI }) => {
   const formattedDate = new Date(post.createdAt).toLocaleString();
 
   return (
-    <Card className="max-w-xl mx-auto shadow-md my-2">
-      <CardHeader>
-        <div className="flex items-center space-x-3">
-          <UserImage post={post} fullName={fullName} />
-          <PostData formattedDate={formattedDate} fullName={fullName} />
-        </div>
-      </CardHeader>
+    <Link to={`/post/${post.postId}`}>
+      <Card className="max-w-xl mx-auto shadow-md my-2">
+        <CardHeader>
+          <Link
+            to={`/user/${post.user.userId}`}
+            className="flex items-center space-x-3"
+          >
+            <UserImage post={post} fullName={fullName} />
+            <PostData formattedDate={formattedDate} fullName={fullName} />
+          </Link>
+        </CardHeader>
 
-      <CardContent>
-        {post.title && <p className="mb-2 text-sm">{post.title}</p>}
-        {post.images.length > 0 && (
-          <Image url={post.images[0].url} imageId={post.images[0].imageId} />
-        )}
-      </CardContent>
-    </Card>
+        <CardContent>
+          {post.title && <p className="mb-2 text-sm">{post.title}</p>}
+          {post.images.length > 0 && (
+            <Image url={post.images[0].url} imageId={post.images[0].imageId} />
+          )}
+        </CardContent>
+      </Card>
+    </Link>
   );
 };
 

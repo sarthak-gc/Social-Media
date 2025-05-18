@@ -11,6 +11,7 @@ export const getAllNotifications = async (c: Context) => {
         receiverId: userId,
       },
       select: {
+        notificationId: true,
         type: true,
         isRead: true,
         creator: {
@@ -79,7 +80,8 @@ export const markAllNotificationsAsRead = async (c: Context) => {
 
 export const markAsRead = async (c: Context) => {
   const userId = c.get("userId");
-  const notificationId = c.req.query().notificationId;
+
+  const notificationId = c.req.param().notificationId;
 
   if (!notificationId) {
     return c.json({

@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { login } from "@/services/auth";
 import { Input } from "@/components/ui/input";
+import useAppSettingStore from "@/store/appSettings";
 
 const LoginForm = () => {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-
+  const setIsLoggedIn = useAppSettingStore().setIsLoggedIn;
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setForm((prev) => ({ ...prev, [id]: value }));
@@ -25,6 +26,7 @@ const LoginForm = () => {
       if (status === "success") {
         localStorage.setItem("token", data.token);
         localStorage.setItem("userId", data.userId);
+        setIsLoggedIn(true);
         navigate("/feed");
       }
     } catch (err) {

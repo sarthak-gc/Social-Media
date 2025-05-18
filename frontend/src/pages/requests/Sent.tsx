@@ -27,6 +27,11 @@ const Sent = () => {
     })();
   }, []);
 
+  const handleRemoveRequest = (requestId: string) => {
+    setSentRequests((prev) =>
+      prev.filter((elem) => elem.requestId != requestId)
+    );
+  };
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -54,7 +59,11 @@ const Sent = () => {
       <CardContent>
         {sentRequests.length > 0 ? (
           sentRequests.map((request) => (
-            <FriendRequests key={request.receiverId} request={request} />
+            <FriendRequests
+              key={request.receiverId}
+              request={request}
+              handleRemoveRequest={handleRemoveRequest}
+            />
           ))
         ) : (
           <p className="text-center text-gray-500 col-span-full">

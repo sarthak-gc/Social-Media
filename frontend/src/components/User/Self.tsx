@@ -160,7 +160,6 @@ const Self = () => {
       <div className="w-1/3">
         <Card className="h-[90vh] overflow-auto px-10">
           <div className=" flex gap-4 w-full  ">
-            <Link to="friends"> All</Link>
             <Link to="sent">Sent</Link>
             <Link to="received">Received</Link>
           </div>

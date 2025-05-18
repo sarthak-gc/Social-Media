@@ -2,8 +2,10 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { logout } from "@/services/auth";
+import useAppSettingStore from "@/store/appSettings";
 
 const Logout = () => {
+  const setIsLoggedIn = useAppSettingStore().setIsLoggedIn;
   const navigate = useNavigate();
   useEffect(() => {
     (async () => {
@@ -14,10 +16,11 @@ const Logout = () => {
       } finally {
         localStorage.removeItem("token");
         localStorage.removeItem("userId");
+        setIsLoggedIn(false);
         navigate("/login");
       }
     })();
-  }, [navigate]);
+  }, [navigate, setIsLoggedIn]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">

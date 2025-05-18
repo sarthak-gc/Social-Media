@@ -45,6 +45,15 @@ export const changePfp = async (formData: FormData) => {
 };
 
 export const getAllNotifications = async () => {
-  const notifications = await AXIOS_NOTIFICATION("all");
+  const notifications = await AXIOS_NOTIFICATION.get("all");
+  return notifications.data;
+};
+
+export const markAsRead = async (notificationId: string) => {
+  const notifications = await AXIOS_NOTIFICATION.post(`read/${notificationId}`);
+  return notifications.data;
+};
+export const markAllAsRead = async () => {
+  const notifications = await AXIOS_NOTIFICATION.post("read/all");
   return notifications.data;
 };
