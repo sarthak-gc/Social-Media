@@ -80,16 +80,15 @@ const LoginForm = () => {
               )}
             </Button>
           </form>
-
-          <CardFooter className="mt-4">
-            <span>
-              <span>Don&apos;t have an account?</span>
-              <Link className="ml-1  underline" to="/register">
-                Register
-              </Link>
-            </span>
-          </CardFooter>
         </CardContent>
+        <CardFooter >
+          <span className="text-center w-full inline-block">
+            <span>Don&apos;t have an account?</span>
+            <Link className="ml-1  underline" to="/register">
+              Register
+            </Link>
+          </span>
+        </CardFooter>
       </Card>
     </div>
   );

@@ -116,8 +116,8 @@ const RegisterForm = () => {
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="mt-4">
-          <span>
+        <CardFooter>
+          <span className="text-center w-full inline-block">
             <span>Already have an account?</span>
             <Link className="ml-1  underline" to="/login">
               Login

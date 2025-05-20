@@ -13,7 +13,7 @@
         { "key": "Access-Control-Allow-Credentials", "value": "true" },
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://social-media-ivory-tau.vercel.app"
+          "value": "https://social-media-virid-nu.vercel.app"
         },
         {
           "key": "Access-Control-Allow-Methods",
