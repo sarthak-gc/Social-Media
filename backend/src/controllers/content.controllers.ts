@@ -11,7 +11,7 @@ export const addPost = async (c: Context) => {
 
   try {
     // const { title } = (await c.req.json()) || null;
-    
+
     const formData = await c.req.formData();
     const title = formData.get("title") as string;
 
@@ -73,8 +73,6 @@ export const addPost = async (c: Context) => {
       },
     });
   } catch (e) {
-    console.log("Error during file upload:", e);
-
     return c.json(
       { status: "error", message: "An unexpected error occurred" },
       500

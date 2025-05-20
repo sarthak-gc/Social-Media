@@ -8,7 +8,7 @@ import {
 const notificationRoutes = new Hono();
 
 notificationRoutes.get("/all", getAllNotifications);
-notificationRoutes.post("/read/:notificationId", markAsRead);
 notificationRoutes.post("/read/all", markAllNotificationsAsRead);
+notificationRoutes.post("/read/:notificationId", markAsRead);
 
 export default notificationRoutes;
