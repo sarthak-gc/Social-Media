@@ -14,7 +14,7 @@ const useAppSettingStore = create<SettingStore>()(
       theme: "dark",
       isLoggedIn: false,
       setTheme: (theme) => set({ theme }),
-      setIsLoggedIn: (isLoggedIn) => set({ isLoggedIn }),
+      setIsLoggedIn: (val) => set({ isLoggedIn: val }),
     }),
     {
       name: "app-setting",

@@ -6,6 +6,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 interface UserStore {
   user: UserI;
   notifications: NotificationI[];
+  unReadCount: number;
   isPending: boolean;
   error: Error | null;
   setUser: (user: UserI) => void;
@@ -27,6 +28,7 @@ const useUserStore = create<UserStore>()(
         userId: "",
       },
       notifications: [],
+      unReadCount: 0,
       isPending: false,
       error: null,
       setUser: (user) => set({ user }),
@@ -39,8 +41,10 @@ const useUserStore = create<UserStore>()(
           const response = await getAllNotifications();
 
           const notifications = response.data.notifications;
-
           set({ notifications });
+
+          const unReadCount = response.data.unReadCount;
+          set({ unReadCount });
         } catch (error) {
           set({
             error: error instanceof Error ? error : new Error("Unknown error"),

@@ -22,7 +22,6 @@ const Post = () => {
       const fetchPost = async () => {
         try {
           const response = await AXIOS_CONTENT.get(`${postId}`);
-          console.log(response, "TESTING");
           setPost(response.data.data.post);
         } catch (e) {
           if (e instanceof AxiosError) {

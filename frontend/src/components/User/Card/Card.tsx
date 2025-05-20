@@ -38,7 +38,6 @@ const UserCard = ({
     | null
   >(null);
 
-  console.log(connectionStatus);
   const [requestId, setRequestId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -60,8 +59,6 @@ const UserCard = ({
         const { data } = await getConnectionStatus(user.userId);
 
         if (data.requestId) {
-          console.log(data.requestId);
-          console.log("HIHI");
           setRequestId(data.requestId);
         }
       } catch (e) {

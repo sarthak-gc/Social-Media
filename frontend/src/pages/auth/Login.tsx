@@ -1,6 +1,12 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { login } from "@/services/auth";
@@ -74,6 +80,15 @@ const LoginForm = () => {
               )}
             </Button>
           </form>
+
+          <CardFooter className="mt-4">
+            <span>
+              <span>Don&apos;t have an account?</span>
+              <Link className="ml-1  underline" to="/register">
+                Register
+              </Link>
+            </span>
+          </CardFooter>
         </CardContent>
       </Card>
     </div>

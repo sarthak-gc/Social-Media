@@ -45,15 +45,30 @@ export const changePfp = async (formData: FormData) => {
 };
 
 export const getAllNotifications = async () => {
-  const notifications = await AXIOS_NOTIFICATION.get("all");
-  return notifications.data;
+  try {
+    const response = await AXIOS_NOTIFICATION.get("all");
+    return response.data;
+  } catch (e) {
+    throw new Error(e as string);
+  }
 };
 
 export const markAsRead = async (notificationId: string) => {
-  const notifications = await AXIOS_NOTIFICATION.post(`read/${notificationId}`);
-  return notifications.data;
+  try {
+    const response = await AXIOS_NOTIFICATION.post(`read/${notificationId}`);
+
+    return response.data;
+  } catch (e) {
+    throw new Error(e as string);
+  }
 };
 export const markAllAsRead = async () => {
-  const notifications = await AXIOS_NOTIFICATION.post("read/all");
-  return notifications.data;
+  try {
+    const response = await AXIOS_NOTIFICATION.post("read/all");
+    console.log(response.data);
+
+    return response.data;
+  } catch (e) {
+    throw new Error(e as string);
+  }
 };

@@ -7,6 +7,7 @@ import useUserStore from "@/store/userStore";
 const Navbar = () => {
   const isLoggedIn = useAppSettingStore().isLoggedIn;
   const notifications = useUserStore().notifications;
+  const unReadCount = useUserStore().unReadCount;
   return (
     <div className="flex justify-between items-center p-4 bg-gray-100">
       <Link to={isLoggedIn ? "/feed" : "/"} className="text-lg font-semibold">
@@ -33,7 +34,9 @@ const Navbar = () => {
             </Link>
             {notifications.length > 0 && (
               <span className="text-sm font-semibold aspect-square h-3 rounded-full flex items-center justify-center absolute bottom-0 right-0">
-                <h1>{notifications.length}</h1>
+                <h1>
+                  {unReadCount == 0 ? "" : unReadCount < 9 ? unReadCount : "9+"}
+                </h1>
               </span>
             )}
           </div>

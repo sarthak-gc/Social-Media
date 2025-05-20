@@ -1,21 +1,18 @@
 import { useEffect, useState } from "react";
-import { AXIOS_USER } from "@/lib/axios";
+import { getPersonalData } from "@/services/me";
+import useAppSettingStore from "@/store/appSettings";
 
 export const useAuth = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const setIsLoggedIn = useAppSettingStore().setIsLoggedIn;
+  const isLoggedIn = useAppSettingStore().isLoggedIn;
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await AXIOS_USER.get("me", {
-          withCredentials: true,
-        });
-
-        if (response.data.status === "success") {
+        const response = await getPersonalData();
+        if (response.status === "success") {
           setIsLoggedIn(true);
-        } else {
-          setIsLoggedIn(false);
         }
       } catch (error) {
         console.error("Authentication check failed:", error);
@@ -26,7 +23,7 @@ export const useAuth = () => {
     };
 
     checkAuth();
-  }, []);
+  }, [setIsLoggedIn]);
 
   return { isLoggedIn, loading };
 };
