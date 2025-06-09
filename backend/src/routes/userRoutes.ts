@@ -13,20 +13,19 @@ import {
   // seed,
 } from "../controllers/user.controllers";
 import { authenticate } from "../middlewares/authentication";
-import { cloudinaryMiddleware } from "../middlewares/cloudinary";
 
 const userRoutes = new Hono();
 userRoutes.post("/login", login);
 userRoutes.post("/logout", logout);
 userRoutes.post("/register", register);
+// userRoutes.get("/seed", seed);
 userRoutes.use(authenticate);
 userRoutes.get("/profile/:profileId", getUser);
 userRoutes.get("/people/:name", getUsers);
 userRoutes.get("/friends/:profileId", getFriends);
 
 userRoutes.get("/me", aboutMe);
-// userRoutes.get("/seed", seed);
-userRoutes.put("/pfp", cloudinaryMiddleware, changePfp);
+userRoutes.put("/pfp", changePfp);
 userRoutes.put("/update", updateMe);
 
 export default userRoutes;

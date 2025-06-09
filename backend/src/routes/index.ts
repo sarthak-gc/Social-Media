@@ -11,13 +11,13 @@ import { cors } from "hono/cors";
 
 const routes = new Hono();
 
-// const frontendUrl = "https://social-media-ivory-tau.vercel.app";
-const frontendUrl = "http://localhost:5173";
+const frontendUrl = "https://social-media.sarthakgc.com.np";
+// const frontendUrl = "http://localhost:5173";
 
 routes.use(
   cors({
     origin: frontendUrl,
-    allowMethods: ["GET", "PUT", "POST"],
+    allowMethods: ["GET", "PUT", "POST", "DELETE", "PATCH", "OPTIONS"],
     credentials: true,
   })
 );

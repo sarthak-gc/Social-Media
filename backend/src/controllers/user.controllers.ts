@@ -110,7 +110,7 @@ export const login = async (c: Context) => {
 
     const token = jwt.sign({ userId: user.userId }, "secret");
     setCookie(c, "token", token, {
-      sameSite: "Lax",
+      sameSite: "None",
       secure: true,
       httpOnly: true,
     });
@@ -278,7 +278,7 @@ export const changePfp = async (c: Context) => {
   const prisma = getPrisma(c);
 
   try {
-    const result = await uploadImage(formDataToSend);
+    const result = await uploadImage(formDataToSend, c);
 
     await prisma.$transaction(async () => {
       const post = await prisma.post.create({
@@ -414,37 +414,25 @@ export const updateMe = async (c: Context) => {
 
 export const seed = async (c: Context) => {
   const prisma = getPrisma(c);
-  const credentials: Record<string, string> = {};
-
+  const users = [];
   try {
-    for (let i = 0; i < 10; i++) {
-      const password = faker.internet.password();
-      const hashedPassword = await bcrypt.hash(password, 12);
+    for (let i = 1; i <= 26; i++) {
+      const username = String.fromCharCode(96 + i);
+      const email = username + "@" + username + "." + username;
 
-      const user = await prisma.user.create({
-        data: {
-          password: hashedPassword,
-          firstName: faker.person.firstName(),
-          middleName: faker.person.middleName(),
-          lastName: faker.person.lastName(),
-          email: faker.internet.email(),
-          pfp: faker.image.avatar(),
-        },
+      const hashedPassword = await bcrypt.hash(username, 12);
+
+      users.push({
+        password: hashedPassword,
+        firstName: username,
+        middleName: username,
+        lastName: username,
+        email,
       });
-
-      credentials[user.email] = password;
-
-      for (let j = 0; j < 2; j++) {
-        await prisma.post.create({
-          data: {
-            posterId: user.userId,
-            title: faker.lorem.sentence(),
-          },
-        });
-      }
-
-      console.log(`Created user ${user.email} : ${password}`);
     }
+    await prisma.user.createMany({
+      data: users,
+    });
 
     return c.text("DONE");
   } catch (error) {

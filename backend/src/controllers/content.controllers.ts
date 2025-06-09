@@ -5,13 +5,29 @@ import { uploadImage, validateImage } from "../utils/uploadImage";
 import { findUser } from "../utils/user";
 import { findFriends } from "../utils/relation";
 import { NotificationType } from "../generated/prisma";
+import {
+  addComment,
+  addReaction,
+  changeReaction,
+  createImage,
+  createPost,
+  findComment,
+  findPost,
+  findPosts,
+  findReaction,
+  findReactions,
+  getComments,
+  getValidComment,
+  getValidReaction,
+  removeComment,
+  removeReaction,
+  updateComment,
+} from "../utils/content";
 
 export const addPost = async (c: Context) => {
   const userId = c.get("userId");
 
   try {
-    // const { title } = (await c.req.json()) || null;
-
     const formData = await c.req.formData();
     const title = formData.get("title") as string;
 
@@ -26,12 +42,7 @@ export const addPost = async (c: Context) => {
     }
     const prisma = getPrisma(c);
 
-    const post = await prisma.post.create({
-      data: {
-        posterId: userId,
-        title,
-      },
-    });
+    const post = await createPost(prisma, userId, title);
     let result;
 
     if (image) {
@@ -40,14 +51,9 @@ export const addPost = async (c: Context) => {
       }
       formDataToSend = await validateImage(image);
 
-      result = await uploadImage(formDataToSend);
+      result = await uploadImage(formDataToSend, c);
 
-      await prisma.image.create({
-        data: {
-          postId: post.postId,
-          url: result.secure_url,
-        },
-      });
+      await createImage(prisma, post.postId, result.secure_url);
     }
 
     const friends = await findFriends(prisma, userId);
@@ -102,21 +108,7 @@ export const getPosts = async (c: Context) => {
         404
       );
     }
-    const posts = await prisma.post.findMany({
-      where: {
-        posterId: userId,
-      },
-      include: {
-        images: true,
-        user: {
-          select: {
-            firstName: true,
-            lastName: true,
-            pfp: true,
-          },
-        },
-      },
-    });
+    const posts = await findPosts(prisma, userId);
     return c.json({
       status: "success",
       message: "Posts retrieved",
@@ -135,21 +127,7 @@ export const getPosts = async (c: Context) => {
 
 export const getFeed = async (c: Context) => {
   const prisma = getPrisma(c);
-  const posts = await prisma.post.findMany({
-    where: {},
-    include: {
-      images: true,
-      user: {
-        select: {
-          firstName: true,
-          lastName: true,
-          pfp: true,
-          middleName: true,
-          userId: true,
-        },
-      },
-    },
-  });
+  const posts = findPosts(prisma, null);
   return c.json({
     status: "success",
     message: "Posts Retrieved",
@@ -164,22 +142,7 @@ export const getPost = async (c: Context) => {
   const postId = c.req.param("postId");
 
   try {
-    const post = await prisma.post.findUnique({
-      where: {
-        postId: postId,
-      },
-      include: {
-        images: true,
-        user: {
-          select: {
-            firstName: true,
-            lastName: true,
-            pfp: true,
-            userId: true,
-          },
-        },
-      },
-    });
+    const post = await findPost(prisma, postId);
 
     if (!post) {
       return c.json(
@@ -237,6 +200,201 @@ export const getImage = async (c: Context) => {
       data: {
         imageUrl: image.url,
       },
+    });
+  } catch (e) {
+    return c.json(
+      { status: "error", message: "An unexpected error occurred" },
+      500
+    );
+  }
+};
+
+export const reactPost = async (c: Context) => {
+  const { postId } = c.req.param();
+  const { userId } = c.get("user");
+
+  const body = await c.req.json();
+
+  let { type = "" } = body;
+
+  try {
+    type = getValidReaction(c, type);
+
+    const prisma = getPrisma(c);
+    const reaction = await findReaction(prisma, userId, postId);
+
+    if (reaction) {
+      if (reaction.type === type) {
+        await removeReaction(prisma, userId, postId);
+        return c.json({
+          status: "success",
+          message: "reaction removed",
+        });
+      } else {
+        await changeReaction(prisma, userId, postId, type);
+        return c.json({
+          status: "success",
+          message: "reaction changed",
+        });
+      }
+    }
+    await addReaction(prisma, userId, postId, type);
+    return c.json({ status: "success", message: "Reacted to the post" });
+  } catch (e) {
+    return c.json(
+      { status: "error", message: "An unexpected error occurred" },
+      500
+    );
+  }
+};
+
+export const getReactions = async (c: Context) => {
+  const { postId } = c.req.param();
+  const prisma = getPrisma(c);
+  try {
+    const reactions = await findReactions(prisma, postId);
+    return c.json({
+      reactions,
+      count: reactions.length,
+    });
+  } catch (e) {
+    return c.json(
+      { status: "error", message: "An unexpected error occurred" },
+      500
+    );
+  }
+};
+
+export const commentOnPost = async (c: Context) => {
+  const { postId } = c.req.param();
+  const { userId } = c.get("user");
+  let { comment } = await c.req.json();
+  try {
+    comment = getValidComment(comment);
+
+    const prisma = getPrisma(c);
+
+    const commentDetails = await addComment(prisma, postId, userId, comment);
+    return c.json({
+      status: "success",
+      message: "Comment posted",
+      data: {
+        commentDetails,
+      },
+    });
+  } catch (e) {
+    return c.json(
+      { status: "error", message: "An unexpected error occurred" },
+      500
+    );
+  }
+};
+
+export const getPostComments = async (c: Context) => {
+  const { userId } = c.get("user");
+  const { postId } = c.req.param();
+
+  const prisma = getPrisma(c);
+
+  try {
+    const post = await findPost(prisma, postId);
+
+    if (!post) {
+      return c.json({
+        status: "error",
+        message: "post not found",
+      });
+    }
+
+    const isFollowing = await prisma.relation.findFirst({
+      where: {
+        sender: userId,
+      },
+    });
+
+    const comments = await getComments(prisma, postId);
+
+    if (isFollowing) {
+      return c.json({
+        status: "success",
+        message: "Comments retrieved",
+        data: {
+          comments,
+        },
+      });
+    }
+
+    return c.json({
+      status: "success",
+      message: "Comments retrieved",
+    });
+  } catch (e) {
+    return c.json(
+      { status: "error", message: "An unexpected error occurred" },
+      500
+    );
+  }
+};
+
+export const editComment = async (c: Context) => {
+  const { userId } = c.get("user");
+
+  const { commentId } = c.req.param();
+  const { content } = await c.req.json();
+  const prisma = getPrisma(c);
+  try {
+    const comment = await findComment(prisma, commentId);
+    if (!comment) {
+      return c.json({
+        status: "error",
+        message: "No comment to edit",
+      });
+    }
+    const isAuthor = userId === comment.commenterId;
+    if (!isAuthor) {
+      return c.json({
+        status: "error",
+        message: "Not Authorized to edit the comment",
+      });
+    }
+
+    updateComment(prisma, commentId, content);
+    return c.json({
+      status: "success",
+    });
+  } catch (e) {
+    return c.json(
+      { status: "error", message: "An unexpected error occurred" },
+      500
+    );
+  }
+};
+
+export const deleteComment = async (c: Context) => {
+  const { userId } = c.get("user");
+
+  const { commentId } = c.req.param();
+
+  const prisma = getPrisma(c);
+  try {
+    const comment = await findComment(prisma, commentId);
+    if (!comment) {
+      return c.json({
+        status: "error",
+        message: "No comment to delete",
+      });
+    }
+    const isAuthor = userId === comment.commenterId;
+    if (!isAuthor) {
+      return c.json({
+        status: "error",
+        message: "Not Authorized to delete the comment",
+      });
+    }
+
+    removeComment(prisma, commentId);
+    return c.json({
+      status: "success",
     });
   } catch (e) {
     return c.json(

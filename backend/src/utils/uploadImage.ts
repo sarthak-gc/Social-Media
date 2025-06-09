@@ -1,7 +1,8 @@
+import { Context } from "hono";
 import { encodeBase64 } from "hono/utils/encode";
 
-export const uploadImage = async (formDataToSend: FormData) => {
-  const cloudinaryUrl = `https://api.cloudinary.com/v1_1/deljnxufx/upload`;
+export const uploadImage = async (formDataToSend: FormData, c: Context) => {
+  const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${c.env.CLOUDINARY_CLOUD_NAME}/upload`;
 
   const response = await fetch(cloudinaryUrl, {
     method: "POST",
@@ -20,7 +21,6 @@ export const uploadImage = async (formDataToSend: FormData) => {
 };
 
 export const validateImage = async (image: File) => {
-  
   const imageByteArrayBuffer = await image.arrayBuffer();
   const imageBase64 = encodeBase64(imageByteArrayBuffer);
   const base64Image = `data:${image.type};base64,${imageBase64}`;
