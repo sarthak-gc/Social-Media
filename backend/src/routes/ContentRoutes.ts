@@ -25,7 +25,8 @@ contentRoutes.post("/:postId/react", reactPost);
 contentRoutes.get("/:postId/reactions", getReactions);
 
 contentRoutes.post("/:postId/comment", commentOnPost);
-contentRoutes.get("/:postId/comments/", getPostComments);
+
+contentRoutes.get("/:postId/comments", getPostComments);
 contentRoutes.put("/comment/:commentId", editComment);
 contentRoutes.delete("/comment/:commentId", deleteComment);
 

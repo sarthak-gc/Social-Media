@@ -196,6 +196,7 @@ export const findPost = async (prisma: PrismaClient, postId: string) => {
           userId: true,
         },
       },
+      images: true,
     },
   });
   return post;
@@ -280,6 +281,7 @@ export const findPosts = async (
           userId: true,
         },
       },
+      Comments: true,
     },
   });
   return post;

@@ -127,7 +127,7 @@ export const getPosts = async (c: Context) => {
 
 export const getFeed = async (c: Context) => {
   const prisma = getPrisma(c);
-  const posts = findPosts(prisma, null);
+  const posts = await findPosts(prisma, null);
   return c.json({
     status: "success",
     message: "Posts Retrieved",
@@ -211,10 +211,8 @@ export const getImage = async (c: Context) => {
 
 export const reactPost = async (c: Context) => {
   const { postId } = c.req.param();
-  const { userId } = c.get("user");
-
+  const userId = c.get("userId");
   const body = await c.req.json();
-
   let { type = "" } = body;
 
   try {
@@ -267,7 +265,7 @@ export const getReactions = async (c: Context) => {
 
 export const commentOnPost = async (c: Context) => {
   const { postId } = c.req.param();
-  const { userId } = c.get("user");
+  const userId = c.get("userId");
   let { comment } = await c.req.json();
   try {
     comment = getValidComment(comment);
@@ -291,7 +289,7 @@ export const commentOnPost = async (c: Context) => {
 };
 
 export const getPostComments = async (c: Context) => {
-  const { userId } = c.get("user");
+  const userId = c.get("userId");
   const { postId } = c.req.param();
 
   const prisma = getPrisma(c);
@@ -306,29 +304,17 @@ export const getPostComments = async (c: Context) => {
       });
     }
 
-    const isFollowing = await prisma.relation.findFirst({
-      where: {
-        sender: userId,
-      },
-    });
-
     const comments = await getComments(prisma, postId);
-
-    if (isFollowing) {
-      return c.json({
-        status: "success",
-        message: "Comments retrieved",
-        data: {
-          comments,
-        },
-      });
-    }
 
     return c.json({
       status: "success",
       message: "Comments retrieved",
+      data: {
+        comments,
+      },
     });
   } catch (e) {
+    console.log(e);
     return c.json(
       { status: "error", message: "An unexpected error occurred" },
       500
@@ -337,7 +323,7 @@ export const getPostComments = async (c: Context) => {
 };
 
 export const editComment = async (c: Context) => {
-  const { userId } = c.get("user");
+  const userId = c.get("userId");
 
   const { commentId } = c.req.param();
   const { content } = await c.req.json();
@@ -371,7 +357,7 @@ export const editComment = async (c: Context) => {
 };
 
 export const deleteComment = async (c: Context) => {
-  const { userId } = c.get("user");
+  const userId = c.get("userId");
 
   const { commentId } = c.req.param();
 

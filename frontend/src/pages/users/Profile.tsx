@@ -30,7 +30,7 @@ const User = () => {
       const { data } = await fetchUserProfile(userId);
       return data;
     },
-    refetchInterval: 30000,
+    refetchInterval: 3000000,
   });
 
   const {
@@ -44,7 +44,7 @@ const User = () => {
       const { data } = await fetchUserPosts(userId);
       return data.posts;
     },
-    refetchInterval: 30000,
+    refetchInterval: 3000000,
   });
   useEffect(() => {
     (async () => {

@@ -65,7 +65,6 @@ export const markAsRead = async (notificationId: string) => {
 export const markAllAsRead = async () => {
   try {
     const response = await AXIOS_NOTIFICATION.post("read/all");
-    console.log(response.data);
 
     return response.data;
   } catch (e) {

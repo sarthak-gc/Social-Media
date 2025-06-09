@@ -4,7 +4,34 @@ export interface UserI {
   lastName: string;
   middleName?: string;
   email: string;
-  pfp: string;
+  pfp: string | null;
+}
+
+export interface CommentI {
+  commentId: string;
+  content: string;
+  postId: string;
+  commenterId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  isUpdated: boolean;
+  parentId: string | null;
+
+  User: UserI;
+  parent: Comment | null;
+  replies: Comment[];
+}
+
+export interface ReactionI {
+  postId: string;
+  userId: string;
+  type: string;
+  createdAt: string;
+  updatedAt: string;
+  User: {
+    firstName: string;
+    lastName: string;
+  };
 }
 
 export interface PostI {
@@ -22,6 +49,8 @@ export interface PostI {
     pfp: string;
     middleName?: string;
   };
+  reactions: number;
+  Comments: Comment[];
 }
 
 export interface SentFriendRequestI {

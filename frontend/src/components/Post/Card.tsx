@@ -1,34 +1,81 @@
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import type { PostI } from "@/pages/types/types";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import Actions from "./Actions";
+import { useState } from "react";
+import React from "../Svg/React";
+import Comment from "../Svg/Comment";
 
 const PostCard = ({ post }: { post: PostI }) => {
   const fullName = `${post.user.firstName} ${post.user.middleName || ""} ${
     post.user.lastName
   }`.trim();
   const formattedDate = new Date(post.createdAt).toLocaleString();
-
+  const [showReactions, setShowReactions] = useState(false);
+  const toggleReactionOptions = () => {
+    setShowReactions(!showReactions);
+  };
+  const navigate = useNavigate();
   return (
-    <Link to={`/post/${post.postId}`}>
-      <Card className="max-w-xl mx-auto shadow-md my-2">
-        <CardHeader>
-          <Link
-            to={`/user/${post.user.userId}`}
-            className="flex items-center space-x-3"
-          >
-            <UserImage post={post} fullName={fullName} />
-            <PostData formattedDate={formattedDate} fullName={fullName} />
-          </Link>
-        </CardHeader>
-
+    <Card className="max-w-xl mx-auto shadow-md my-2">
+      <CardHeader>
+        <Link
+          to={`/user/${post.user.userId}`}
+          className="flex items-center space-x-3"
+        >
+          <UserImage post={post} fullName={fullName} />
+          <PostData formattedDate={formattedDate} fullName={fullName} />
+        </Link>
+      </CardHeader>
+      <Link to={`/post/${post.postId}`}>
         <CardContent>
           {post.title && <p className="mb-2 text-sm">{post.title}</p>}
-          {post.images.length > 0 && (
-            <Image url={post.images[0].url} imageId={post.images[0].imageId} />
-          )}
+          {post.images.length > 0 && <Image url={post.images[0].url} />}
         </CardContent>
-      </Card>
-    </Link>
+      </Link>
+
+      <div className="relative  w-full h-10 flex items-center px-10 gap-4">
+        <span onClick={toggleReactionOptions}>
+          <div className="flex gap-1 text-sm">
+            <React />
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/reactions/${post.postId}`, {
+                  state: {
+                    postId: post.postId,
+                  },
+                });
+              }}
+            >
+              {post.reactions}
+            </span>
+          </div>
+        </span>
+        <span>
+          <div className="flex gap-1 text-sm">
+            <Comment />
+            <span
+              onClick={() => {
+                navigate(`/comments/${post.postId}`, {
+                  state: {
+                    postId: post.postId,
+                  },
+                });
+              }}
+            >
+              {post.Comments.length}
+            </span>
+          </div>
+        </span>
+        {showReactions && (
+          <Actions
+            postId={post.postId}
+            toggleReactionOptions={toggleReactionOptions}
+          />
+        )}
+      </div>
+    </Card>
   );
 };
 
@@ -61,20 +108,14 @@ const PostData = ({
     </div>
   );
 };
-
-const Image = ({ imageId, url }: { imageId: string; url: string }) => {
+const Image = ({ url }: { url: string }) => {
   return (
-    <Link
-      to={`/image/${imageId}`}
-      state={{
-        image: url,
-      }}
-    >
+    <div>
       <img
         src={url}
         alt="Post"
         className="rounded max-h-[400px] w-full object-cover"
       />
-    </Link>
+    </div>
   );
 };

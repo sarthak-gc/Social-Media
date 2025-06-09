@@ -35,7 +35,6 @@ export const getFeed = async () => {
     const response = await AXIOS_CONTENT.get("feed");
     return response.data;
   } catch (e) {
-    console.error(e);
     if (e instanceof AxiosError) {
       throw new Error(e.response?.data);
     }

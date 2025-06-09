@@ -25,6 +25,8 @@ import Notifications from "./pages/users/Notifications.tsx";
 import Post from "./pages/Post/Post.tsx";
 import { useEffect } from "react";
 import useUserStore from "./store/userStore.ts";
+import Comments from "./pages/Post/Comments.tsx";
+import Reactions from "./pages/Post/Reactions.tsx";
 
 const queryClient = new QueryClient();
 
@@ -36,7 +38,7 @@ const App = () => {
       if (isLoggedIn) {
         setInterval(() => {
           fetchNotifications();
-        }, 10000);
+        }, 1000000);
       }
     }, [isLoggedIn]);
     if (loading) {
@@ -115,6 +117,14 @@ const App = () => {
           element: <Received />,
         },
       ],
+    },
+    {
+      path: "/comments/:postId",
+      element: <Comments />,
+    },
+    {
+      path: "/reactions/:postId",
+      element: <Reactions />,
     },
     { path: "*", element: <NotFound /> },
   ]);

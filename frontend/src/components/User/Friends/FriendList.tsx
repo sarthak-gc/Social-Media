@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { UserI } from "@/pages/types/types";
+import { Link } from "react-router-dom";
 
 interface FriendListProps {
   friends: UserI[];
@@ -17,13 +18,14 @@ const FriendList = ({ friends }: FriendListProps) => {
       <CardContent className="flex flex-col">
         {friends.length > 0 ? (
           friends.map((friend) => (
-            <div
+            <Link
+              to={`/user/${friend.userId}`}
               key={friend.userId}
               className="flex items-center gap-4 p-3 border rounded-md shadow-sm bg-white mb-2"
             >
               <FriendPfp friend={friend} />
               <Name friend={friend} />
-            </div>
+            </Link>
           ))
         ) : (
           <p className="text-center text-gray-500 col-span-full">

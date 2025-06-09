@@ -34,7 +34,7 @@ const Image = () => {
   }
 
   return (
-    <div className="bg-red-50 flex justify-center items-center h-screen w-screen">
+    <div className="bg-black flex justify-center items-center h-screen w-screen">
       <img src={imageUrl} alt="Full Size" className="max-w-[90%] max-h-[90%]" />
     </div>
   );

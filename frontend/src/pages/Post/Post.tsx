@@ -74,6 +74,7 @@ const Post = () => {
         <CardContent className="space-y-6">
           <div className="flex flex-wrap gap-4 flex-col">
             <h1>{post.title}</h1>
+
             {post.images && post.images.length > 0 && (
               <img
                 onClick={() => {
@@ -82,7 +83,7 @@ const Post = () => {
                 key={post.images[0].imageId}
                 src={post.images[0].url}
                 alt="Post Image"
-                className="rounded-lg shadow-md w-full object-cover aspect-video"
+                className="rounded-lg w-full object-contain aspect-video"
               />
             )}
           </div>
