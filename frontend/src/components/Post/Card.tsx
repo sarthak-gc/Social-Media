@@ -44,6 +44,7 @@ const PostCard = ({ post }: { post: PostI }) => {
                 navigate(`/reactions/${post.postId}`, {
                   state: {
                     postId: post.postId,
+                    post: post,
                   },
                 });
               }}
@@ -53,19 +54,19 @@ const PostCard = ({ post }: { post: PostI }) => {
           </div>
         </span>
         <span>
-          <div className="flex gap-1 text-sm">
+          <div
+            onClick={() => {
+              navigate(`/comments/${post.postId}`, {
+                state: {
+                  postId: post.postId,
+                  post: post,
+                },
+              });
+            }}
+            className="flex gap-1 text-sm"
+          >
             <Comment />
-            <span
-              onClick={() => {
-                navigate(`/comments/${post.postId}`, {
-                  state: {
-                    postId: post.postId,
-                  },
-                });
-              }}
-            >
-              {post.Comments.length}
-            </span>
+            <span>{post.Comments.length}</span>
           </div>
         </span>
         {showReactions && (

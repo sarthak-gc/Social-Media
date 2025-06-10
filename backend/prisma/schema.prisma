@@ -130,7 +130,7 @@ enum NotificationType {
   POST
   REQUEST_SENT
   REQUEST_ACCEPTED
-  // COMMENT
+  COMMENT
 }
 
 enum ReactionType {

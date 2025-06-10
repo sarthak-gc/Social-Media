@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { AXIOS_CONTENT } from "@/lib/axios";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { type CommentI } from "../types/types";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { type CommentI, type UserI } from "../types/types";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import useUserStore from "@/store/userStore";
+import PostCard from "@/components/Post/Card";
 
 const Comments = () => {
   const location = useLocation();
@@ -14,6 +15,7 @@ const Comments = () => {
   const [comments, setComments] = useState<CommentI[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const post = state.post || {};
 
   // const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
@@ -25,7 +27,7 @@ const Comments = () => {
         setComments(response.data.data.comments);
       } catch (err) {
         setError("Error fetching comments");
-        console.log(err);
+        JSON.stringify(err);
       } finally {
         setLoading(false);
       }
@@ -81,17 +83,7 @@ const Comments = () => {
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow-md">
-      <h1 className="text-3xl font-semibold text-gray-800 mb-4">
-        {state.postId || postId}
-      </h1>
-
-      {loading && (
-        <div className="text-center text-gray-600">Loading comments...</div>
-      )}
-      {error && <h1>{error}</h1>}
-
-      <CommentForm onSubmit={handleNewComment} />
-      <CommentList comments={comments} />
+      <PostCard post={post} />
       <div className="flex justify-end p-4">
         <Button
           onClick={() => {
@@ -103,6 +95,15 @@ const Comments = () => {
           Go Back
         </Button>
       </div>
+      <CommentForm onSubmit={handleNewComment} />
+      {loading ? (
+        <div className="text-center text-gray-600 mt-4">
+          Loading comments...
+        </div>
+      ) : (
+        <CommentList comments={comments} />
+      )}
+      {error && <h1>{error}</h1>}
     </div>
   );
 };
@@ -136,12 +137,15 @@ interface CommentItemProps {
 const CommentItem: React.FC<CommentItemProps> = ({ comment }) => {
   return (
     <div className="p-4 border rounded-lg shadow-sm hover:bg-gray-50">
-      <div className="flex items-center space-x-2">
+      <Link
+        to={`/user/${comment.User.userId}`}
+        className="flex items-center space-x-2"
+      >
+        <UserImage user={comment.User} />
         <strong className="text-lg text-gray-800">
-          {comment.User?.firstName}
+          {comment.User.firstName}
         </strong>
-        <span className="text-sm text-gray-500">commented:</span>
-      </div>
+      </Link>
       <p className="mt-2 text-gray-700">{comment.content}</p>
       <p className="mt-2 text-xs text-gray-400">
         {new Date(comment.createdAt).toLocaleString()}
@@ -183,5 +187,21 @@ const CommentForm: React.FC<CommentFormProps> = ({ onSubmit }) => {
         Post Comment
       </Button>
     </form>
+  );
+};
+
+const UserImage = ({ user }: { user: UserI }) => {
+  const fullName = `${user.firstName} ${user.middleName || ""} ${
+    user.lastName
+  }`.trim();
+  return (
+    <div
+      className={`h-10 w-10 rounded-full ${
+        !user.pfp && "bg-gray-300 items-center justify-center flex"
+      }`}
+    >
+      {user.pfp && <img src={user.pfp} alt="a" />}
+      {!user.pfp && fullName.charAt(0).toUpperCase()}
+    </div>
   );
 };

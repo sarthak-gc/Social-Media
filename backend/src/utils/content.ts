@@ -152,6 +152,9 @@ export const getComments = async (prisma: PrismaClient, postId: string) => {
         },
       },
     },
+    orderBy: {
+      createdAt: "desc",
+    },
   });
   return comments;
 };

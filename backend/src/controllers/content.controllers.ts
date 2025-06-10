@@ -272,7 +272,24 @@ export const commentOnPost = async (c: Context) => {
 
     const prisma = getPrisma(c);
 
+    const post = await findPost(prisma, postId);
+    if (!post) {
+      return c.json({ status: "error", message: "Post not found" }, 404);
+    }
+
     const commentDetails = await addComment(prisma, postId, userId, comment);
+
+    const notificationsData = {
+      type: NotificationType.COMMENT,
+      receiverId: post.user.userId,
+      creatorId: userId,
+      postId: post.postId,
+    };
+
+    await prisma.notification.create({
+      data: notificationsData,
+    });
+
     return c.json({
       status: "success",
       message: "Comment posted",
@@ -289,7 +306,6 @@ export const commentOnPost = async (c: Context) => {
 };
 
 export const getPostComments = async (c: Context) => {
-  const userId = c.get("userId");
   const { postId } = c.req.param();
 
   const prisma = getPrisma(c);

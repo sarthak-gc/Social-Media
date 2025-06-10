@@ -23,15 +23,13 @@ export interface CommentI {
 }
 
 export interface ReactionI {
+  reactionId: string;
   postId: string;
   userId: string;
   type: string;
   createdAt: string;
   updatedAt: string;
-  User: {
-    firstName: string;
-    lastName: string;
-  };
+  User: UserI;
 }
 
 export interface PostI {
@@ -77,7 +75,7 @@ export interface ReceivedFriendRequestI {
   };
 }
 export interface PfpPropI {
-  pfp: string;
+  pfp: string | null;
   name: string;
   editable: boolean;
 }
