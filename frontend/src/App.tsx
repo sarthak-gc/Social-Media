@@ -35,18 +35,11 @@ const App = () => {
   const Layout = ({ children }: { children: React.ReactNode }) => {
     const { isLoggedIn, loading } = useAuth();
     useEffect(() => {
-      let interval: NodeJS.Timeout | null = null;
-
       if (isLoggedIn) {
-        interval = setInterval(() => {
+        setInterval(() => {
           fetchNotifications();
         }, 3000);
       }
-      return () => {
-        if (interval) {
-          clearInterval(interval);
-        }
-      };
     }, [isLoggedIn]);
     if (loading) {
       return <div>Loading...</div>;
