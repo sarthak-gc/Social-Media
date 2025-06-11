@@ -216,9 +216,13 @@ export const reactPost = async (c: Context) => {
   let { type = "" } = body;
 
   try {
+    const prisma = getPrisma(c);
+    const post = await findPost(prisma, postId);
+    if (!post) {
+      return c.json({ status: "error", message: "Post not found" }, 500);
+    }
     type = getValidReaction(c, type);
 
-    const prisma = getPrisma(c);
     const reaction = await findReaction(prisma, userId, postId);
 
     if (reaction) {
@@ -237,6 +241,13 @@ export const reactPost = async (c: Context) => {
       }
     }
     await addReaction(prisma, userId, postId, type);
+    await prisma.notification.create({
+      data: {
+        type: NotificationType.REACTED,
+        creatorId: userId,
+        receiverId: post.user.userId,
+      },
+    });
     return c.json({ status: "success", message: "Reacted to the post" });
   } catch (e) {
     return c.json(

@@ -131,6 +131,7 @@ enum NotificationType {
   REQUEST_SENT
   REQUEST_ACCEPTED
   COMMENT
+  REACTED
 }
 
 enum ReactionType {
