@@ -39,9 +39,10 @@ const Comments = () => {
   }, [postId, state.postId]);
 
   const handleNewComment = async (commentContent: string) => {
+    const user = useUserStore.getState().user;
     const fakeComment: CommentI = {
       commentId: "id",
-      content: "Loading comment...",
+      content: commentContent,
       postId: postId || "postId",
       commenterId: useUserStore.getState().user.userId,
       createdAt: new Date(),
@@ -49,17 +50,16 @@ const Comments = () => {
       isUpdated: false,
       parentId: null,
       User: {
-        userId: "string",
-        firstName: "string",
-        lastName: "string",
-        middleName: "string",
-        email: "string",
-        pfp: null,
+        userId: user.userId,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        pfp: user.pfp,
       },
       parent: null,
       replies: [],
     };
-    setComments((prev) => [...prev, fakeComment]);
+    setComments((prev) => [fakeComment, ...prev]);
 
     try {
       const response = await AXIOS_CONTENT.post(`/${postId}/comment`, {
@@ -72,7 +72,7 @@ const Comments = () => {
         const updatedComments = prev.filter(
           (comment) => comment.commentId !== "id"
         );
-        updatedComments.push(newComment);
+        updatedComments.unshift(newComment);
         return updatedComments;
       });
     } catch (err) {
@@ -82,8 +82,8 @@ const Comments = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow-md">
-      <PostCard post={post} />
+    <div className="max-w-3xl mx-auto p-6  rounded-xl shadow-md">
+      {post.user && <PostCard post={post} />}
       <div className="flex justify-end p-4">
         <Button
           onClick={() => {

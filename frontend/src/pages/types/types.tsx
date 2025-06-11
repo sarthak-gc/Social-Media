@@ -81,7 +81,7 @@ export interface PfpPropI {
 }
 export interface NotificationI {
   notificationId: string;
-  type: "POST" | "REQUEST_SENT" | "REQUEST_ACCEPTED";
+  type: "POST" | "REQUEST_SENT" | "REQUEST_ACCEPTED" | "COMMENT" | "REACTED";
   creatorId: string;
   receiverId: string;
   isRead: boolean;

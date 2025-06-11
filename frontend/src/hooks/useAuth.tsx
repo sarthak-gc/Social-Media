@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getPersonalData } from "@/services/me";
 import useAppSettingStore from "@/store/appSettings";
+import useUserStore from "@/store/userStore";
 
 export const useAuth = () => {
   const setIsLoggedIn = useAppSettingStore().setIsLoggedIn;
@@ -9,10 +10,15 @@ export const useAuth = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
+      const setUser = useUserStore.getState().setUser;
+      const user = useUserStore.getState().user.firstName;
       try {
-        const response = await getPersonalData();
-        if (response.status === "success") {
-          setIsLoggedIn(true);
+        if (!user) {
+          const response = await getPersonalData();
+          if (response.status === "success") {
+            setUser(response.data.me);
+            setIsLoggedIn(true);
+          }
         }
       } catch (error) {
         console.error("Authentication check failed:", error);

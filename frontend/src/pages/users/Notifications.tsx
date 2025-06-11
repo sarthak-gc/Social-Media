@@ -27,13 +27,25 @@ const Notifications = () => {
 
         {notifications.length > 0 ? (
           notifications.map((notification: NotificationI) => {
+            const type = notification.type;
+            let link;
+            switch (type) {
+              case "COMMENT":
+                link = `/post/${notification.postId}`;
+                break;
+              case "REACTED":
+                link = `/post/${notification.postId}`;
+                break;
+              case "POST":
+                link = `/post/${notification.postId}`;
+                break;
+              default:
+                link = `/user/${notification.creator.userId}`;
+                break;
+            }
             return (
               <Link
-                to={
-                  notification.type !== "POST"
-                    ? `/user/${notification.creator.userId}`
-                    : `/post/${notification.postId}`
-                }
+                to={link}
                 onClick={() => markRead(notification.notificationId)}
               >
                 <Card
@@ -97,6 +109,17 @@ const Message = ({
         {type === "POST" && (
           <div>
             {creator.firstName} {creator.lastName} uploaded a new post
+          </div>
+        )}
+
+        {type === "COMMENT" && (
+          <div>
+            {creator.firstName} {creator.lastName} commented on your post
+          </div>
+        )}
+        {type === "REACTED" && (
+          <div>
+            {creator.firstName} {creator.lastName} reacted on your post
           </div>
         )}
       </h1>

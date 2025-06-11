@@ -7,6 +7,7 @@ import { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import type { PostI } from "../types/types";
+import Comments from "./Comments";
 
 const Post = () => {
   const { postId } = useParams<{ postId: string }>();
@@ -100,6 +101,7 @@ const Post = () => {
           </Button>
         </div>
       </Card>
+      <Comments />
     </div>
   );
 };
