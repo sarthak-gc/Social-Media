@@ -39,7 +39,6 @@ export const findRelation = async (
         { initiator: person1, receiver: person2 },
         { initiator: person2, receiver: person1 },
       ],
-      NOT: { type: "UNFRIENDED" },
     },
   });
   return connection;
@@ -56,10 +55,9 @@ export const getStatus = (
   connection: ConnectionType | null,
   userId: string
 ) => {
-  let message;
+  let message = null;
   if (connection) {
     const { type, initiator, receiver } = connection;
-
     if (type === "FRIENDS") message = "FRIENDS";
     else if (
       (type === "BLOCKED_BY_SENDER" && userId === initiator) ||
@@ -71,8 +69,6 @@ export const getStatus = (
       (type === "BLOCKED_BY_SENDER" && userId === receiver)
     )
       message = "BLOCKED_YOU";
-  } else {
-    message = null;
   }
   return message;
 };
@@ -122,7 +118,6 @@ export const unBlock = async (prisma: PrismaClient, relationId: string) => {
     },
   });
 };
-
 
 export const findFriends = async (prisma: PrismaClient, userId: string) => {
   const relations = await prisma.relation.findMany({

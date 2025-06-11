@@ -70,15 +70,22 @@ export const blockUser = async (c: Context) => {
   try {
     const connection = await findRelation(prisma, userId, targetId);
 
-    if (connection?.type !== "FRIENDS") {
+    if (!connection) {
       return c.json(
-        {
-          status: "error",
-          message: "Cant block without connection",
-        },
-        409
+        { status: "error", message: "Cant block without connection" },
+        500
       );
     }
+    if (
+      connection.type == "BLOCKED_BY_SENDER" ||
+      connection.type == "BLOCKED_BY_RECEIVER"
+    ) {
+      return c.json(
+        { status: "error", message: "This contact is already blocked" },
+        500
+      );
+    }
+
     const relationId = connection.relationId;
     if (connection.initiator == userId) {
       await block(prisma, relationId, RelationType.BLOCKED_BY_SENDER);
@@ -112,15 +119,15 @@ export const unBlockUser = async (c: Context) => {
     if (!connection) {
       return c.json({ status: "error", message: "Connection not found" }, 404);
     }
-    const receiver = connection?.receiver;
-    const initiator = connection?.initiator;
+    const receiver = connection.receiver;
+    const initiator = connection.initiator;
 
     if (initiator == userId && connection.type == "BLOCKED_BY_SENDER") {
       await unBlock(prisma, connection.relationId);
     } else if (receiver == userId && connection.type == "BLOCKED_BY_RECEIVER") {
       await unBlock(prisma, connection.relationId);
     } else {
-      return c.json({ status: "error", message: "In valid Request" }, 409);
+      return c.json({ status: "error", message: "Invalid Request" }, 409);
     }
     return c.json({
       status: "success",

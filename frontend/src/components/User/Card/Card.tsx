@@ -28,6 +28,9 @@ const UserCard = ({
   connectionStatus: string;
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isAccepting, setIsAccepting] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
 
   const [friendshipStatus, setFriendShipStatus] = useState<
     | "PENDING_SENT"
@@ -80,6 +83,7 @@ const UserCard = ({
   };
 
   const acceptRequest = async () => {
+    setIsAccepting(true);
     try {
       if (!requestId) return;
       const { status } = await acceptFriendRequest(requestId);
@@ -91,10 +95,13 @@ const UserCard = ({
     } catch (e) {
       console.error(e);
       toast.error("Failed to accept request");
+    } finally {
+      setIsAccepting(false);
     }
   };
 
   const rejectRequest = async () => {
+    setIsRejecting(true);
     try {
       if (!requestId) return;
       const { status } = await rejectFriendRequest(requestId);
@@ -106,6 +113,8 @@ const UserCard = ({
     } catch (e) {
       console.error(e);
       toast.error("Failed to reject request");
+    } finally {
+      setIsRejecting(false);
     }
   };
 
@@ -123,11 +132,14 @@ const UserCard = ({
   };
 
   const removeRelation = async () => {
+    setIsRemoving(true);
     try {
       await unFriend(user.userId);
       setFriendShipStatus(null);
     } catch (e) {
       console.error(e);
+    } finally {
+      setIsRemoving(false);
     }
   };
 
@@ -159,7 +171,10 @@ const UserCard = ({
 
           <div className="flex justify-center">
             {friendshipStatus === "FRIENDS" ? (
-              <Friends removeRelation={removeRelation} />
+              <Friends
+                isRemoving={isRemoving}
+                removeRelation={removeRelation}
+              />
             ) : friendshipStatus === "PENDING_SENT" ? (
               <PendingRequest
                 cancelRequest={cancelRequest}
@@ -169,6 +184,8 @@ const UserCard = ({
               <RequestReceived
                 acceptRequest={acceptRequest}
                 rejectRequest={rejectRequest}
+                isAccepting={isAccepting}
+                isRejecting={isRejecting}
               />
             ) : friendshipStatus === "BLOCKED_BY_YOU" ||
               friendshipStatus === "BLOCKED_YOU" ? (
@@ -187,8 +204,14 @@ const UserCard = ({
 
 export default UserCard;
 
-const Friends = ({ removeRelation }: { removeRelation: () => void }) => {
-  return (
+const Friends = ({
+  removeRelation,
+  isRemoving,
+}: {
+  removeRelation: () => void;
+  isRemoving: boolean;
+}) => {
+  return !isRemoving ? (
     <div className=" gap-4 flex">
       <Button variant="secondary" disabled>
         <svg
@@ -234,6 +257,30 @@ const Friends = ({ removeRelation }: { removeRelation: () => void }) => {
         Remove
       </Button>
     </div>
+  ) : (
+    <Button variant="secondary" disabled={true}>
+      <svg
+        className="animate-spin h-5 w-5 mr-2"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        ></circle>
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
+      Removing...
+    </Button>
   );
 };
 

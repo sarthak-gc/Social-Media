@@ -15,7 +15,7 @@ const Received = () => {
       const { data } = await fetchPendingRequests();
       return data.requests;
     },
-    refetchInterval: 3000000,
+    refetchInterval: 3000,
   });
 
   if (isPending) {

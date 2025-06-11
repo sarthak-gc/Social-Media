@@ -48,7 +48,7 @@ export const sendRequest = async (c: Context) => {
       );
     }
 
-    if (alreadyRequestSent) {
+    if (alreadyRequestSent?.status == "PENDING") {
       return c.json(
         {
           status: "error",
@@ -59,20 +59,22 @@ export const sendRequest = async (c: Context) => {
     }
 
     if (alreadyConnected) {
-      let message = "";
-      if (alreadyConnected.type == "FRIENDS") {
-        message = "You are already connected with this user";
-      } else {
-        message =
-          "Cant sent req when blocked, try unblocking or getting unblocked";
+      if (alreadyConnected.type !== "UNFRIENDED") {
+        let message = "";
+        if (alreadyConnected.type == "FRIENDS") {
+          message = "You are already connected with this user";
+        } else {
+          message =
+            "Cant sent req when blocked, try unblocking or getting unblocked";
+        }
+        return c.json(
+          {
+            status: "error",
+            message,
+          },
+          409
+        );
       }
-      return c.json(
-        {
-          status: "error",
-          message,
-        },
-        409
-      );
     }
     await prisma.$transaction(async (p) => {
       return Promise.all([
@@ -161,8 +163,32 @@ export const acceptFriendRequest = async (c: Context) => {
 
   try {
     await prisma.$transaction(async () => {
-      await acceptRequest(prisma, requestId);
-      await createRelation(prisma, userId, request.senderId);
+      const exists = await findRelation(prisma, userId, request.senderId);
+      if (!exists) {
+        await acceptRequest(prisma, requestId);
+        await createRelation(prisma, userId, request.senderId);
+      } else {
+        if (
+          exists.type !== "BLOCKED_BY_RECEIVER" &&
+          exists.type !== "BLOCKED_BY_SENDER"
+        ) {
+          await acceptRequest(prisma, requestId);
+          await prisma.relation.update({
+            where: {
+              relationId: exists.relationId,
+              type: "UNFRIENDED",
+            },
+            data: {
+              type: "FRIENDS",
+            },
+          });
+        } else {
+          return c.json({
+            status: "success",
+            message: "Blocked relations cannot be accepted",
+          });
+        }
+      }
       await prisma.notification.create({
         data: {
           type: NotificationType.REQUEST_ACCEPTED,
@@ -177,6 +203,7 @@ export const acceptFriendRequest = async (c: Context) => {
       message: "Request Accepted",
     });
   } catch (e) {
+    console.log(e);
     return c.json(
       { status: "error", message: "An unexpected error occurred" },
       500
