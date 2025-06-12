@@ -56,10 +56,9 @@ const PostCard = ({ post }: { post: PostI }) => {
         <span>
           <div
             onClick={() => {
-              navigate(`/comments/${post.postId}`, {
+              navigate(`/post/${post.postId}`, {
                 state: {
-                  postId: post.postId,
-                  post: post,
+                  post,
                 },
               });
             }}

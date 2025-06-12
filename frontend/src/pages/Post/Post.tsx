@@ -12,8 +12,7 @@ import Comments from "./Comments";
 const Post = () => {
   const { postId } = useParams<{ postId: string }>();
   const location = useLocation();
-
-  const [post, setPost] = useState(location.state || null);
+  const [post, setPost] = useState(location.state?.post || null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 

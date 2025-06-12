@@ -1,47 +1,37 @@
-import React, { useEffect, useState } from "react";
-import { AXIOS_CONTENT } from "@/lib/axios";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import type { ReactionI, UserI } from "../types/types";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { getReactions } from "@/services/posts";
 
 const Reactions = () => {
   const location = useLocation();
   const state = location.state || {};
   const { postId } = useParams();
-
   const navigate = useNavigate();
-  const [reactions, setReactions] = useState<ReactionI[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
 
-  useEffect(() => {
-    const fetchReactions = async (id: string) => {
-      setLoading(true);
-      try {
-        const response = await AXIOS_CONTENT.get(`${id}/reactions`);
-
-        setReactions(response.data.reactions);
-      } catch (err) {
-        setError("Error fetching reactions");
-        console.log(err);
-      } finally {
-        setLoading(false);
+  const {
+    isPending,
+    error,
+    data: reactions,
+  } = useQuery({
+    queryKey: ["feed-reactions"],
+    queryFn: async () => {
+      if (postId || state.postId) {
+        const { data } = await getReactions(postId || state.postId);
+        return data.reactions;
       }
-    };
-
-    if (postId || state.postId) {
-      fetchReactions(postId || state.postId);
-    }
-  }, [postId, state.postId]);
-
+    },
+    refetchInterval: 3000,
+  });
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-xl shadow-md">
-      {loading ? (
+      {isPending ? (
         <div className="text-center text-gray-600">Loading reactions...</div>
       ) : (
         <ReactionList reactions={reactions} />
       )}
-      {error && <h1>{error}</h1>}
+      {error && <h1>{error.message}</h1>}
 
       <div className="flex justify-end p-4">
         <Button
@@ -72,9 +62,12 @@ const ReactionList: React.FC<ReactionListProps> = ({ reactions }) => {
           No reactions yet. Be the first to react!
         </p>
       ) : (
-        reactions.map((reaction) => (
-          <ReactionItem key={reaction.userId} reaction={reaction} />
-        ))
+        <>
+          <h1>{reactions.length} people reacted to this post</h1>
+          {reactions.map((reaction) => (
+            <ReactionItem key={reaction.userId} reaction={reaction} />
+          ))}
+        </>
       )}
     </div>
   );

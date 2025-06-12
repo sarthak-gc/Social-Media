@@ -1,109 +1,58 @@
-import React, { useEffect, useState } from "react";
-import { AXIOS_CONTENT } from "@/lib/axios";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import React, { useState } from "react";
+
+import { Link, useLocation, useParams } from "react-router-dom";
 import { type CommentI, type UserI } from "../types/types";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import useUserStore from "@/store/userStore";
-import PostCard from "@/components/Post/Card";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getComments, makeComment } from "@/services/posts";
 
 const Comments = () => {
   const location = useLocation();
   const state = location.state || {};
   const { postId } = useParams();
-  const navigate = useNavigate();
-  const [comments, setComments] = useState<CommentI[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
-  const post = state.post || {};
 
-  // const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-
-  useEffect(() => {
-    const fetchComments = async (id: string) => {
-      setLoading(true);
-      try {
-        const response = await AXIOS_CONTENT.get(`${id}/comments`);
-        setComments(response.data.data.comments);
-      } catch (err) {
-        setError("Error fetching comments");
-        JSON.stringify(err);
-      } finally {
-        setLoading(false);
+  const queryClient = useQueryClient();
+  const {
+    isPending,
+    error,
+    data: comments,
+  } = useQuery({
+    queryKey: ["feed-comments"],
+    queryFn: async () => {
+      if (postId || state.postId) {
+        const { data } = await getComments(postId || state.postId);
+        return data.comments;
       }
-    };
-
-    if (postId || state.postId) {
-      fetchComments(state.postId || postId);
-    }
-  }, [postId, state.postId]);
+    },
+    refetchInterval: 3000,
+  });
 
   const handleNewComment = async (commentContent: string) => {
-    const user = useUserStore.getState().user;
-    const fakeComment: CommentI = {
-      commentId: "id",
-      content: commentContent,
-      postId: postId || "postId",
-      commenterId: useUserStore.getState().user.userId,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      isUpdated: false,
-      parentId: null,
-      User: {
-        userId: user.userId,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        pfp: user.pfp,
-      },
-      parent: null,
-      replies: [],
-    };
-    setComments((prev) => [fakeComment, ...prev]);
-
+    if (!postId && !state.postId) {
+      return;
+    }
     try {
-      const response = await AXIOS_CONTENT.post(`/${postId}/comment`, {
-        comment: commentContent,
-      });
-
-      const newComment = response.data.data.commentDetails;
-
-      setComments((prev) => {
-        const updatedComments = prev.filter(
-          (comment) => comment.commentId !== "id"
-        );
-        updatedComments.unshift(newComment);
-        return updatedComments;
-      });
+      makeComment(commentContent, postId || state.postId);
+      queryClient.invalidateQueries({ queryKey: ["feed-comments"] });
     } catch (err) {
-      console.log(err);
-      setError("Error posting comment");
+      console.error("Failed to add comment");
+      JSON.stringify(err);
     }
   };
 
   return (
     <div className="max-w-3xl mx-auto p-6  rounded-xl shadow-md">
-      {post.user && <PostCard post={post} />}
-      <div className="flex justify-end p-4">
-        <Button
-          onClick={() => {
-            navigate(-1);
-          }}
-          variant="outline"
-          className="hover:bg-secondary"
-        >
-          Go Back
-        </Button>
-      </div>
+      <div className="flex justify-end p-4"></div>
       <CommentForm onSubmit={handleNewComment} />
-      {loading ? (
+      {isPending ? (
         <div className="text-center text-gray-600 mt-4">
           Loading comments...
         </div>
       ) : (
         <CommentList comments={comments} />
       )}
-      {error && <h1>{error}</h1>}
+      {error && <h1>{error.message}</h1>}
     </div>
   );
 };

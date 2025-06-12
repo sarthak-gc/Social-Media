@@ -263,8 +263,9 @@ export const getReactions = async (c: Context) => {
   try {
     const reactions = await findReactions(prisma, postId);
     return c.json({
-      reactions,
-      count: reactions.length,
+      data: {
+        reactions,
+      },
     });
   } catch (e) {
     return c.json(

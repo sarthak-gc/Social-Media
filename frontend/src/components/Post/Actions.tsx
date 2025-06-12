@@ -1,5 +1,5 @@
-import { AXIOS_CONTENT } from "@/lib/axios";
-
+import { makeReaction } from "@/services/posts";
+import { useQueryClient } from "@tanstack/react-query";
 const Actions = ({
   toggleReactionOptions,
   postId,
@@ -7,6 +7,7 @@ const Actions = ({
   toggleReactionOptions: () => void;
   postId: string;
 }) => {
+  const queryClient = useQueryClient();
   return (
     <div>
       <ul className="flex space-x-4 p-4 rounded-lg absolute -bottom-4 -left-10">
@@ -50,9 +51,10 @@ const Actions = ({
                 emoji?.classList.add("shatter");
                 setTimeout(() => {
                   toggleReactionOptions();
-                  AXIOS_CONTENT.post(`${postId}/react`, {
-                    type: action,
+                  queryClient.invalidateQueries({
+                    queryKey: ["feed-reactions"],
                   });
+                  makeReaction(action, postId);
                 }, 300);
               }}
               id={`emoji-${action}`}
